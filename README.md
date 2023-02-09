@@ -33,7 +33,7 @@ import (
 	"os"
 	"time"
 
-	"franciscoescher/gosimplerest"
+	"github.com/franciscoescher/gosimplerest"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"

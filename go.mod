@@ -1,4 +1,4 @@
-module franciscoescher/gosimplerest
+module github.com/franciscoescher/gosimplerest
 
 go 1.19
 

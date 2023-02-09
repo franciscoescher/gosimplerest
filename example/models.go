@@ -53,7 +53,7 @@ CREATE TABLE `rent_events` (
 */
 
 import (
-	"franciscoescher/gosimplerest"
+	"github.com/franciscoescher/gosimplerest"
 
 	"gopkg.in/guregu/null.v3"
 )
