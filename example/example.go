@@ -16,8 +16,9 @@ import (
 )
 
 func main() {
-	db := getDB()
 	logger := logrus.New()
+	db := getDB()
+	defer db.Close()
 
 	// create router
 	r := mux.NewRouter()
