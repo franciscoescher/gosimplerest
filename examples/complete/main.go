@@ -17,6 +17,9 @@ import (
 
 func main() {
 	logger := logrus.New()
+
+	logger.Info("starting application")
+
 	db := getDB()
 	defer db.Close()
 

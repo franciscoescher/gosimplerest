@@ -14,4 +14,4 @@ The database credentials will be read from the following environment variables:
 
 ## Running the example
 
-`DB_USER=<user> DB_HOSTNAME=<host> DB_PORT=<port> DB_SCHEMA=<schema> DB_PASSWORD=<pwd> go run ./example`
+`DB_USER=<user> DB_HOSTNAME=<host> DB_PORT=<port> DB_SCHEMA=<schema> DB_PASSWORD=<pwd> go run ./examples/belongs`

@@ -1,29 +1,3 @@
-# Go Simple Rest
-
-This package provides an out of the box implementation of a rest api router for go.
-
-The database is written for sql but can be easily modified to work with other.
-
-It uses gorilla mux as router and logrus as logger.
-
-The api will create endpoints for each resource provided to the AddHandlers function.
-
-It creates the following routes (models are table names of the resources, converted to kebab case):
-- GET /model/{id}
-- POST /model
-- PUT /model
-- DELETE /model/{id}
-  
-Also, for each belongs to relation, it creates the following routes:
-- GET /belongs-to/{id}/model
-  
-The handlers parameter is a function to wrap the handlers with, for example, authentication and logging
-
-## Simple usage
-
-Bellow, a simple example of how to use the package. For a more complete example, see the `./examples/complete` folder.
-
-```
 package main
 
 import (
@@ -41,6 +15,19 @@ import (
 	"gopkg.in/guregu/null.v3"
 )
 
+// Mysql Schema
+/*
+DROP TABLE IF EXISTS `users`;
+
+CREATE TABLE `users` (
+	`id` varchar(191) NOT NULL,
+	`created_at` datetime(3) DEFAULT NULL,
+	`name` varchar(255) DEFAULT NULL,
+	`contact` varchar(255) DEFAULT NULL,
+	PRIMARY KEY (`uuid`)
+);
+*/
+
 var UserResource = gosimplerest.Resource{
 	Table:      "users",
 	PrimaryKey: "id",
@@ -55,6 +42,9 @@ var UserResource = gosimplerest.Resource{
 
 func main() {
 	logger := logrus.New()
+
+	logger.Info("starting application")
+
 	db := getDB()
 	defer db.Close()
 
@@ -95,16 +85,3 @@ func getDB() *sql.DB {
 
 	return db
 }
-```
-
-```
-DROP TABLE IF EXISTS `users`;
-
-CREATE TABLE `users` (
-  `id` varchar(191) NOT NULL,
-  `created_at` datetime(3) DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `contact` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`uuid`)
-);
-```
