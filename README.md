@@ -36,52 +36,60 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/franciscoescher/gosimplerest"
+	"github.com/gin-gonic/gin"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/guregu/null.v3"
 )
 
+// Mysql Schema
+/*
+DROP TABLE IF EXISTS `users`;
+
+CREATE TABLE `users` (
+	`uuid` varchar(191) NOT NULL,
+	`created_at` datetime(3) DEFAULT NULL,
+	`deleted_at` datetime(3) DEFAULT NULL,
+	`first_name` varchar(255) DEFAULT NULL,
+	`phone` varchar(255) DEFAULT NULL,
+	PRIMARY KEY (`uuid`)
+);
+*/
+
 var UserResource = gosimplerest.Resource{
 	Table:      "users",
-	PrimaryKey: "id",
-	Fields: []gosimplerest.Field{
-		{Name: "id"},
-		{Name: "name"},
-		{Name: "contact"},
-		{Name: "created_at"},
+	PrimaryKey: "uuid",
+	Fields: map[string]gosimplerest.Field{
+		"uuid":       {},
+		"first_name": {},
+		"phone":      {},
+		"created_at": {},
+		"deleted_at": {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 }
 
 func main() {
 	logger := logrus.New()
+
+	logger.Info("starting application")
+
 	db := getDB()
 	defer db.Close()
 
 	// create routes for rest api
-	r := mux.NewRouter()
-	r = gosimplerest.AddGorillaMuxHandlers(
+	r := gin.Default()
+	gosimplerest.AddGinHandlers(
+		r,
 		db,
 		logger,
-		r,
-		[]gosimplerest.Resource{UserResource},
-		nil)
+		[]gosimplerest.Resource{UserResource})
 
-	// start server
-	srv := &http.Server{
-		Addr:         "127.0.0.1:3333",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-		Handler:      r,
-	}
-	logrus.Fatal(srv.ListenAndServe())
+	logrus.Fatal(r.Run(":3333"))
 }
 
 func getDB() *sql.DB {
@@ -102,16 +110,4 @@ func getDB() *sql.DB {
 
 	return db
 }
-```
-
-```
-DROP TABLE IF EXISTS `users`;
-
-CREATE TABLE `users` (
-  `id` varchar(191) NOT NULL,
-  `created_at` datetime(3) DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `contact` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`uuid`)
-);
 ```
