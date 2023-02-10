@@ -42,6 +42,6 @@ func GorillaMiddelwares(mid func(h http.Handler) http.HandlerFunc, handlerFunc h
 	return func(rw http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		r = GetRequestWithParams(r, params)
-		mid(handlerFunc).ServeHTTP(rw, r)
+		handlerFunc.ServeHTTP(rw, r)
 	}
 }
