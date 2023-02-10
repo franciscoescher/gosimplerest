@@ -4,15 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
+	"github.com/gin-gonic/gin"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,44 +24,13 @@ func main() {
 	defer db.Close()
 
 	// create router
-	r := mux.NewRouter()
+	r := gin.Default()
 
 	// create routes for rest api
 	resources := []gosimplerest.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	r = gosimplerest.AddGorillaMuxHandlers(r, db, logger, resources, LoggingMiddleware)
+	gosimplerest.AddGinHandlers(r, db, logger, resources)
 
-	// iterates over routes and logs them
-	err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		tpl, err := route.GetPathTemplate()
-		if err != nil {
-			return err
-		}
-		methods, nil := route.GetMethods()
-		if err != nil {
-			return err
-		}
-		for _, method := range methods {
-			logrus.WithFields(logrus.Fields{
-				"method": method,
-				"path":   tpl,
-			}).Info("route registered")
-		}
-		return nil
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// start server
-	srv := &http.Server{
-		Addr:         "127.0.0.1:3333",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-		Handler:      r,
-	}
-	if err := srv.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
+	log.Fatal(r.Run(":3333"))
 }
 
 func getDB() *sql.DB {

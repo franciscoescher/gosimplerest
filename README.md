@@ -6,7 +6,7 @@ The database is written for sql but can be easily modified to work with other.
 
 It uses gorilla mux as router and logrus as logger.
 
-The api will create endpoints for each resource provided to the AddHandlers function.
+The api will create endpoints for each resource provided to the AddGorillaMuxHandlers function.
 
 It creates the following routes (models are table names of the resources, converted to kebab case):
 - GET /model/{id}
@@ -65,7 +65,7 @@ func main() {
 
 	// create routes for rest api
 	r := mux.NewRouter()
-	r = gosimplerest.AddHandlers(
+	r = gosimplerest.AddGorillaMuxHandlers(
 		db,
 		logger,
 		r,

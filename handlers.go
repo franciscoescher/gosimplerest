@@ -2,23 +2,24 @@ package gosimplerest
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"encoding/json"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
 // GetHandler returns a handler for the GET method
 func GetHandler(resource Resource) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
+		id := ReadParams(r, "id")
 
 		// validates id
 		err := resource.ValidateField(resource.PrimaryKey, id)
 		if err != nil {
+			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -43,11 +44,12 @@ func GetHandler(resource Resource) http.HandlerFunc {
 // DeleteHandler returns a handler for the DELETE method
 func DeleteHandler(resource Resource) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
+		id := ReadParams(r, "id")
 
 		// validates id
 		err := resource.ValidateField(resource.PrimaryKey, id)
 		if err != nil {
+			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -128,6 +130,7 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 		// primary key is required
 		_, ok := data[resource.PrimaryKey]
 		if !ok {
+			json.NewEncoder(w).Encode("primery key is required")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -169,11 +172,12 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 // GetBelongsToHandler returns a handler for the GET method of the belongs to relationship
 func GetBelongsToHandler(resource Resource, belongsTo BelongsTo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
+		id := ReadParams(r, "id")
 
 		// validates id
 		err := resource.ValidateField(resource.PrimaryKey, id)
 		if err != nil {
+			logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

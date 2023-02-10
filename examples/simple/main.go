@@ -50,10 +50,10 @@ func main() {
 
 	// create routes for rest api
 	r := mux.NewRouter()
-	r = gosimplerest.AddHandlers(
+	r = gosimplerest.AddGorillaMuxHandlers(
+		r,
 		db,
 		logger,
-		r,
 		[]gosimplerest.Resource{UserResource},
 		nil)
 

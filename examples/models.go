@@ -1,4 +1,4 @@
-package main
+package examples
 
 // Example implementation for the following mysql data structures:
 /*
