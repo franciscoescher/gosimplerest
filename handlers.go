@@ -36,8 +36,8 @@ func GetHandler(resource Resource) http.HandlerFunc {
 			return
 		}
 
-		json.NewEncoder(w).Encode(result)
 		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
 	}
 }
 
@@ -93,8 +93,8 @@ func CreateHandler(resource Resource) http.HandlerFunc {
 		for key := range data {
 			// validates field exists in the model
 			if !resource.HasField(key) {
-				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
 				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
 				return
 			}
 			// validates value
@@ -130,8 +130,8 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 		// primary key is required
 		_, ok := data[resource.PrimaryKey]
 		if !ok {
-			json.NewEncoder(w).Encode("primery key is required")
 			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode("primery key is required")
 			return
 		}
 
@@ -143,8 +143,8 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 		for key := range data {
 			// validates field exists in the model
 			if !resource.HasField(key) {
-				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
 				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
 				return
 			}
 			// validates value
@@ -194,8 +194,8 @@ func GetBelongsToHandler(resource Resource, belongsTo BelongsTo) http.HandlerFun
 			return
 		}
 
-		json.NewEncoder(w).Encode(result)
 		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
 	}
 }
 
@@ -208,8 +208,8 @@ func SearchHandler(resource Resource) http.HandlerFunc {
 		for key := range query {
 			// validates fields
 			if !resource.IsSearchable(key) {
-				json.NewEncoder(w).Encode(fmt.Sprintf("%s is not searchable", key))
 				w.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(w).Encode(fmt.Sprintf("%s is not searchable", key))
 				return
 			}
 			// validates values
@@ -234,8 +234,8 @@ func SearchHandler(resource Resource) http.HandlerFunc {
 			return
 		}
 
-		json.NewEncoder(w).Encode(result)
 		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
 	}
 }
 

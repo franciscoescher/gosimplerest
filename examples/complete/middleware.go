@@ -25,6 +25,7 @@ func (rw *loggingResponseWriter) Write(b []byte) (n int, err error) {
 
 func (rw *loggingResponseWriter) WriteHeader(code int) {
 	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
 }
 
 func LoggingMiddleware(h http.Handler) http.HandlerFunc {
