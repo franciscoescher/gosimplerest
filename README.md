@@ -10,6 +10,7 @@ The api will create endpoints for each resource provided to the AddHandlers func
 
 It creates the following routes (models are table names of the resources, converted to kebab case):
 - GET /model/{id}
+- GET /model
 - POST /model
 - PUT /model
 - DELETE /model/{id}
