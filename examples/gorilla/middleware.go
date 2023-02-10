@@ -43,7 +43,7 @@ func LoggingMiddleware(h http.Handler) http.HandlerFunc {
 			"status":   lrw.statusCode,
 			"duration": duration,
 			"size":     lrw.size,
-		}).Info("request completed")
+		}).Info("request gorillad")
 	}
 	return http.HandlerFunc(fn)
 }

@@ -28,7 +28,7 @@ First, import the package:
 
 `go get github.com/franciscoescher/gosimplerest`
 
-Bellow, a simple example of how to use the package. For a more complete example, see the `./examples/complete` folder.
+Bellow, a simple example of how to use the package. For a more complete example, see the `./examples/gin` folder.
 
 ```
 package main
