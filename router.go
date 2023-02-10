@@ -24,6 +24,7 @@ GET /model/{id}
 POST /model
 PUT /model
 DELETE /model/{id}
+GET /model
 
 Also, for each belongs to relation, it creates the following routes:
 
@@ -43,6 +44,7 @@ func AddHandlers(d *sql.DB, l *logrus.Logger, r *mux.Router, resources []Resourc
 		r.HandleFunc(nameID, Middelwares(mid, DeleteHandler(resource))).Methods(http.MethodDelete)
 		r.HandleFunc(name, Middelwares(mid, CreateHandler(resource))).Methods(http.MethodPost)
 		r.HandleFunc(name, Middelwares(mid, UpdateHandler(resource))).Methods(http.MethodPut)
+		r.HandleFunc(name, Middelwares(mid, SearchHandler(resource))).Methods(http.MethodGet)
 
 		for _, belongsTo := range resource.BelongsToFields {
 			nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
@@ -68,6 +70,13 @@ func GetHandler(resource Resource) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 
+		// validates id
+		err := validateField(resource, resource.PrimaryKey, id)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		result, err := resource.Find(id)
 		if err != nil {
 			if err.Error() == "sql: no rows in result set" {
@@ -89,7 +98,14 @@ func DeleteHandler(resource Resource) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 
-		err := resource.Delete(id)
+		// validates id
+		err := validateField(resource, resource.PrimaryKey, id)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err = resource.Delete(id)
 		if err != nil {
 			if err.Error() == "no rows affected" {
 				w.WriteHeader(http.StatusNotFound)
@@ -127,6 +143,12 @@ func CreateHandler(resource Resource) http.HandlerFunc {
 		// validates that all fields in data are in the model
 		for key := range data {
 			if !resource.HasField(key) {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			// validates fields
+			err := validateField(resource, key, data[key])
+			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -193,12 +215,67 @@ func unmarschalBody(r *http.Request) (map[string]interface{}, error) {
 	return objmap, err
 }
 
+func validateField(resource Resource, field string, value interface{}) error {
+	vf := resource.Fields[field].Validator
+	if vf != nil {
+		err := vf(field, value)
+		return err
+	}
+	return nil
+}
+
 // GetBelongsToHandler returns a handler for the GET method of the belongs to relationship
 func GetBelongsToHandler(resource Resource, belongsTo BelongsTo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 
+		// validates id
+		err := validateField(resource, resource.PrimaryKey, id)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		result, err := resource.FindFromBelongsTo(id, belongsTo)
+		if err != nil {
+			if err.Error() == "sql: no rows in result set" {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(result)
+		w.Header().Set("Content-Type", "application/json")
+	}
+}
+
+// SearchHandler returns a handler for the GET method with query params
+func SearchHandler(resource Resource) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		query := r.URL.Query()
+
+		// validates that all fields in data are in the model
+		for key := range query {
+			if !resource.HasField(key) {
+				logrus.Error(fmt.Errorf("field %s unkown", key))
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			for _, v := range query[key] {
+				// validates fields
+				err := validateField(resource, key, v)
+				if err != nil {
+					logrus.Error(err)
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
+			}
+		}
+
+		result, err := resource.Search(query)
 		if err != nil {
 			if err.Error() == "sql: no rows in result set" {
 				w.WriteHeader(http.StatusNotFound)

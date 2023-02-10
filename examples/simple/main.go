@@ -31,11 +31,11 @@ CREATE TABLE `users` (
 var UserResource = gosimplerest.Resource{
 	Table:      "users",
 	PrimaryKey: "id",
-	Fields: []gosimplerest.Field{
-		{Name: "id"},
-		{Name: "name"},
-		{Name: "contact"},
-		{Name: "created_at"},
+	Fields: map[string]gosimplerest.Field{
+		"id":         {},
+		"name":       {},
+		"contact":    {},
+		"created_at": {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 }

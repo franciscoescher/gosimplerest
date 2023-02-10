@@ -3,10 +3,12 @@ package gosimplerest
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	null "gopkg.in/guregu/null.v3"
 )
 
@@ -17,7 +19,7 @@ type Resource struct {
 	// PrimaryKey is the name of field that is the primary key
 	PrimaryKey string
 	// Fields is a list of fields in the table
-	Fields []Field
+	Fields map[string]Field
 	// SoftDeleteField is the name of the field that is used for soft deletes
 	// if null, no soft deletes are used
 	SoftDeleteField null.String
@@ -36,7 +38,7 @@ type Resource struct {
 }
 
 type Field struct {
-	Name string
+	Validator ValidatorFunc
 }
 
 type BelongsTo struct {
@@ -44,14 +46,12 @@ type BelongsTo struct {
 	Field string
 }
 
+type ValidatorFunc func(field string, val interface{}) error
+
 // HasField returns true if the model has the given field
 func (b *Resource) HasField(field string) bool {
-	for _, f := range b.Fields {
-		if f.Name == field {
-			return true
-		}
-	}
-	return false
+	_, ok := b.Fields[field]
+	return ok
 }
 
 // GeneratePrimaryKey generates a new primary key
@@ -63,15 +63,24 @@ func (b *Resource) GeneratePrimaryKey() interface{} {
 }
 
 func (b *Resource) defaultGeneratePrimaryKeyFunc() string {
-	return b.PrimaryKey
+	id, _ := uuid.NewV4()
+	return id.String()
+}
+
+func (b *Resource) GetFieldNames() []string {
+	fields := make([]string, len(b.Fields))
+	i := 0
+	for field := range b.Fields {
+		fields[i] = field
+		i++
+	}
+	sort.Strings(fields)
+	return fields
 }
 
 // Find returns a single row from the database, search by the primary key
 func (b *Resource) Find(id interface{}) (map[string]interface{}, error) {
-	fields := make([]string, len(b.Fields))
-	for i, field := range b.Fields {
-		fields[i] = field.Name
-	}
+	fields := b.GetFieldNames()
 
 	response := db.QueryRow(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ? LIMIT 1`, strings.Join(fields, ","), b.Table, b.PrimaryKey), id)
 
@@ -93,11 +102,12 @@ func (b *Resource) Find(id interface{}) (map[string]interface{}, error) {
 // parseRow parses a row from the database, returning a map with
 // the field names as keys and the values as values
 func (b *Resource) parseRow(values []interface{}) (map[string]interface{}, error) {
+	fields := b.GetFieldNames()
 	result := make(map[string]interface{}, len(b.Fields))
 	for i, v := range values {
 		// if nil, set to nil
 		if v == nil {
-			result[b.Fields[i].Name] = nil
+			result[fields[i]] = nil
 			continue
 		}
 
@@ -105,11 +115,11 @@ func (b *Resource) parseRow(values []interface{}) (map[string]interface{}, error
 		x, ok := v.([]byte)
 		if ok {
 			if p, ok := strconv.ParseFloat(string(x), 64); ok == nil {
-				result[b.Fields[i].Name] = p
+				result[fields[i]] = p
 			} else if p, ok := strconv.ParseBool(string(x)); ok == nil {
-				result[b.Fields[i].Name] = p
+				result[fields[i]] = p
 			} else if fmt.Sprintf("%T", string(x)) == "string" {
-				result[b.Fields[i].Name] = string(x)
+				result[fields[i]] = string(x)
 			} else {
 				return result, fmt.Errorf("failed on if for type %T of %v", x, x)
 			}
@@ -119,20 +129,38 @@ func (b *Resource) parseRow(values []interface{}) (map[string]interface{}, error
 		// if time
 		t, ok := v.(time.Time)
 		if ok {
-			result[b.Fields[i].Name] = t
+			result[fields[i]] = t
 			continue
 		}
 
 		// if int
 		n, ok := v.(int64)
 		if ok {
-			result[b.Fields[i].Name] = n
+			result[fields[i]] = n
 			continue
 		}
 
 		return result, fmt.Errorf("unmapped type for model %s", b.Table)
 	}
 	return result, nil
+}
+
+func (b *Resource) parseRows(response *sql.Rows) ([]map[string]interface{}, error) {
+	results := make([]map[string]interface{}, 0)
+	for response.Next() {
+		values := make([]interface{}, len(b.Fields))
+		scanArgs := make([]interface{}, len(b.Fields))
+		for i := range values {
+			scanArgs[i] = &values[i]
+		}
+		response.Scan(scanArgs...)
+		result, err := b.parseRow(values)
+		if err != nil {
+			return results, err
+		}
+		results = append(results, result)
+	}
+	return results, nil
 }
 
 // Delete deletes a row with the given primary key from the database
@@ -204,30 +232,44 @@ func (b *Resource) Update(data map[string]interface{}) (int64, error) {
 
 // FindFromBelongsTo finds all rows of a model with the belongsTo relationship
 func (b *Resource) FindFromBelongsTo(id interface{}, belongsTo BelongsTo) ([]map[string]interface{}, error) {
-	fields := make([]string, len(b.Fields))
-	for i, field := range b.Fields {
-		fields[i] = field.Name
-	}
+	fields := b.GetFieldNames()
 
 	response, err := db.Query(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ?`, strings.Join(fields, ","), b.Table, belongsTo.Field), id)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Close()
+	return b.parseRows(response)
+}
 
-	results := make([]map[string]interface{}, 0)
-	for response.Next() {
-		values := make([]interface{}, len(b.Fields))
-		scanArgs := make([]interface{}, len(b.Fields))
-		for i := range values {
-			scanArgs[i] = &values[i]
+// FindFromBelongsTo finds all rows of a model with the belongsTo relationship
+func (b *Resource) Search(query map[string][]string) ([]map[string]interface{}, error) {
+	fields := b.GetFieldNames()
+
+	// build query
+	where := make([]string, len(query))
+	values := make([]interface{}, 0)
+	i := 0
+	for field, value := range query {
+		if len(value) == 1 {
+			where[i] = fmt.Sprintf("%s = ?", field)
+			values = append(values, value[0])
+		} else {
+			where[i] = fmt.Sprintf("%s IN (%s)", field, strings.Repeat("?,", len(value)-1)+"?")
+			for _, v := range value {
+				values = append(values, v)
+			}
 		}
-		response.Scan(scanArgs...)
-		result, err := b.parseRow(values)
-		if err != nil {
-			return results, err
-		}
-		results = append(results, result)
+		i++
 	}
-	return results, nil
+	whereStr := ""
+	if len(where) > 0 {
+		whereStr = "WHERE " + strings.Join(where, " AND ")
+	}
+	response, err := db.Query(fmt.Sprintf(`SELECT %s FROM %s %s`, strings.Join(fields, ","), b.Table, whereStr), values...)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Close()
+	return b.parseRows(response)
 }

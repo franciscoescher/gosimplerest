@@ -53,7 +53,12 @@ CREATE TABLE `rent_events` (
 */
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/franciscoescher/gosimplerest"
+	"github.com/gofrs/uuid"
 
 	"gopkg.in/guregu/null.v3"
 )
@@ -61,15 +66,15 @@ import (
 var UserResource = gosimplerest.Resource{
 	Table:      "users",
 	PrimaryKey: "uuid",
-	Fields: []gosimplerest.Field{
-		{Name: "uuid"},
-		{Name: "first_name"},
-		{Name: "last_name"},
-		{Name: "phone"},
-		{Name: "credit_card"},
-		{Name: "created_at"},
-		{Name: "deleted_at"},
-		{Name: "updated_at"},
+	Fields: map[string]gosimplerest.Field{
+		"uuid":        {Validator: validateUUID},
+		"first_name":  {Validator: validateLenght(1)},
+		"last_name":   {Validator: validateLenght(1)},
+		"phone":       {},
+		"credit_card": {},
+		"created_at":  {Validator: validateTime},
+		"deleted_at":  {Validator: validateTime},
+		"updated_at":  {Validator: validateTime},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
@@ -79,18 +84,18 @@ var UserResource = gosimplerest.Resource{
 var RentEventResource = gosimplerest.Resource{
 	Table:      "rent_events",
 	PrimaryKey: "uuid",
-	Fields: []gosimplerest.Field{
-		{Name: "uuid"},
-		{Name: "user_id"},
-		{Name: "vehicle_id"},
-		{Name: "starting_time"},
-		{Name: "hours"},
-		{Name: "checkin_time"},
-		{Name: "dropoff_time"},
-		{Name: "cancel_time"},
-		{Name: "created_at"},
-		{Name: "deleted_at"},
-		{Name: "updated_at"},
+	Fields: map[string]gosimplerest.Field{
+		"uuid":          {Validator: validateUUID},
+		"user_id":       {Validator: validateUUID},
+		"vehicle_id":    {Validator: validateUUID},
+		"starting_time": {Validator: validateTime},
+		"hours":         {Validator: validateIntPositive},
+		"checkin_time":  {Validator: validateTime},
+		"dropoff_time":  {Validator: validateTime},
+		"cancel_time":   {Validator: validateTime},
+		"created_at":    {Validator: validateTime},
+		"deleted_at":    {Validator: validateTime},
+		"updated_at":    {Validator: validateTime},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
@@ -104,19 +109,69 @@ var RentEventResource = gosimplerest.Resource{
 var VehicleResource = gosimplerest.Resource{
 	Table:      "vehicles",
 	PrimaryKey: "uuid",
-	Fields: []gosimplerest.Field{
-		{Name: "uuid"},
-		{Name: "license_plate"},
-		{Name: "state"},
-		{Name: "archived"},
-		{Name: "year"},
-		{Name: "price_per_hour"},
-		{Name: "lot"},
-		{Name: "created_at"},
-		{Name: "deleted_at"},
-		{Name: "updated_at"},
+	Fields: map[string]gosimplerest.Field{
+		"uuid":           {Validator: validateUUID},
+		"license_plate":  {},
+		"state":          {},
+		"archived":       {},
+		"year":           {Validator: validateIntPositive},
+		"price_per_hour": {},
+		"lot":            {Validator: validateIntPositive},
+		"created_at":     {Validator: validateTime},
+		"deleted_at":     {Validator: validateTime},
+		"updated_at":     {Validator: validateTime},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
 	UpdatedAtField:  null.NewString("updated_at", true),
+}
+
+func validateUUID(field string, val interface{}) error {
+	if val == nil {
+		return fmt.Errorf("%s is required", field)
+	}
+	_, err := uuid.FromString(val.(string))
+	if err != nil {
+		return fmt.Errorf(field+" is invalid: %s", val)
+	}
+	return nil
+}
+
+func validateIntPositive(field string, val interface{}) error {
+	s, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("%s is invalid: %s", field, val)
+	}
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return fmt.Errorf("%s is invalid: %s", field, val)
+	}
+	if i <= 0 {
+		return fmt.Errorf("%s must be positive: %s", field, val)
+	}
+	return nil
+}
+
+func validateTime(field string, val interface{}) error {
+	if val == nil {
+		return fmt.Errorf("%s can't be null", field)
+	}
+	_, err := time.Parse(time.RFC3339, val.(string))
+	if err != nil {
+		return fmt.Errorf("%s is invalid: %s", field, val)
+	}
+	return nil
+}
+
+func validateLenght(i int) gosimplerest.ValidatorFunc {
+	return func(field string, val interface{}) error {
+		s, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("%s is invalid: %s", field, val)
+		}
+		if len(s) < i {
+			return fmt.Errorf("%s must have %d characters: %s", field, i, val)
+		}
+		return nil
+	}
 }

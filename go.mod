@@ -10,4 +10,7 @@ require (
 	gopkg.in/guregu/null.v3 v3.5.0
 )
 
-require golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+require (
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+)
