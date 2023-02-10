@@ -72,7 +72,7 @@ var UserResource = gosimplerest.Resource{
 		"last_name":   {Validator: validateLenght(1)},
 		"phone":       {},
 		"credit_card": {},
-		"created_at":  {Validator: validateTime},
+		"created_at":  {Validator: validateTime, Unsearchable: true},
 		"deleted_at":  {Validator: validateTime},
 		"updated_at":  {Validator: validateTime},
 	},
@@ -126,7 +126,7 @@ var VehicleResource = gosimplerest.Resource{
 	UpdatedAtField:  null.NewString("updated_at", true),
 }
 
-func validateUUID(field string, val interface{}) error {
+func validateUUID(field string, val any) error {
 	if val == nil {
 		return fmt.Errorf("%s is required", field)
 	}
@@ -137,7 +137,7 @@ func validateUUID(field string, val interface{}) error {
 	return nil
 }
 
-func validateIntPositive(field string, val interface{}) error {
+func validateIntPositive(field string, val any) error {
 	s, ok := val.(string)
 	if !ok {
 		return fmt.Errorf("%s is invalid: %s", field, val)
@@ -152,7 +152,7 @@ func validateIntPositive(field string, val interface{}) error {
 	return nil
 }
 
-func validateTime(field string, val interface{}) error {
+func validateTime(field string, val any) error {
 	if val == nil {
 		return fmt.Errorf("%s can't be null", field)
 	}
@@ -164,7 +164,7 @@ func validateTime(field string, val interface{}) error {
 }
 
 func validateLenght(i int) gosimplerest.ValidatorFunc {
-	return func(field string, val interface{}) error {
+	return func(field string, val any) error {
 		s, ok := val.(string)
 		if !ok {
 			return fmt.Errorf("%s is invalid: %s", field, val)

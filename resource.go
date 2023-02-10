@@ -34,11 +34,12 @@ type Resource struct {
 	BelongsToFields []BelongsTo
 	// GeneratePrimaryKeyFunc is a function that generates a new primary key
 	// if null, the defaultGeneratePrimaryKeyFunc is used
-	GeneratePrimaryKeyFunc func() interface{}
+	GeneratePrimaryKeyFunc func() any
 }
 
 type Field struct {
-	Validator ValidatorFunc
+	Validator    ValidatorFunc
+	Unsearchable bool
 }
 
 type BelongsTo struct {
@@ -46,7 +47,7 @@ type BelongsTo struct {
 	Field string
 }
 
-type ValidatorFunc func(field string, val interface{}) error
+type ValidatorFunc func(field string, val any) error
 
 // HasField returns true if the model has the given field
 func (b *Resource) HasField(field string) bool {
@@ -54,8 +55,26 @@ func (b *Resource) HasField(field string) bool {
 	return ok
 }
 
+// HasField returns true if the model has the given field
+func (b *Resource) IsSearchable(field string) bool {
+	val, ok := b.Fields[field]
+	if !ok {
+		return false
+	}
+	return !val.Unsearchable
+}
+
+func (b *Resource) ValidateField(field string, value any) error {
+	vf := b.Fields[field].Validator
+	if vf != nil {
+		err := vf(field, value)
+		return err
+	}
+	return nil
+}
+
 // GeneratePrimaryKey generates a new primary key
-func (b *Resource) GeneratePrimaryKey() interface{} {
+func (b *Resource) GeneratePrimaryKey() any {
 	if b.GeneratePrimaryKeyFunc != nil {
 		return b.GeneratePrimaryKeyFunc()
 	}
@@ -79,14 +98,14 @@ func (b *Resource) GetFieldNames() []string {
 }
 
 // Find returns a single row from the database, search by the primary key
-func (b *Resource) Find(id interface{}) (map[string]interface{}, error) {
+func (b *Resource) Find(id any) (map[string]any, error) {
 	fields := b.GetFieldNames()
 
 	response := db.QueryRow(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ? LIMIT 1`, strings.Join(fields, ","), b.Table, b.PrimaryKey), id)
 
-	result := make(map[string]interface{}, len(b.Fields))
-	values := make([]interface{}, len(b.Fields))
-	scanArgs := make([]interface{}, len(b.Fields))
+	result := make(map[string]any, len(b.Fields))
+	values := make([]any, len(b.Fields))
+	scanArgs := make([]any, len(b.Fields))
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
@@ -101,9 +120,9 @@ func (b *Resource) Find(id interface{}) (map[string]interface{}, error) {
 
 // parseRow parses a row from the database, returning a map with
 // the field names as keys and the values as values
-func (b *Resource) parseRow(values []interface{}) (map[string]interface{}, error) {
+func (b *Resource) parseRow(values []any) (map[string]any, error) {
 	fields := b.GetFieldNames()
-	result := make(map[string]interface{}, len(b.Fields))
+	result := make(map[string]any, len(b.Fields))
 	for i, v := range values {
 		// if nil, set to nil
 		if v == nil {
@@ -111,12 +130,17 @@ func (b *Resource) parseRow(values []interface{}) (map[string]interface{}, error
 			continue
 		}
 
-		// if number, bool or string
+		// if int
+		n2, ok := v.(float64)
+		if ok {
+			result[fields[i]] = n2
+			continue
+		}
+
+		// bool or string
 		x, ok := v.([]byte)
 		if ok {
-			if p, ok := strconv.ParseFloat(string(x), 64); ok == nil {
-				result[fields[i]] = p
-			} else if p, ok := strconv.ParseBool(string(x)); ok == nil {
+			if p, ok := strconv.ParseBool(string(x)); ok == nil {
 				result[fields[i]] = p
 			} else if fmt.Sprintf("%T", string(x)) == "string" {
 				result[fields[i]] = string(x)
@@ -133,23 +157,23 @@ func (b *Resource) parseRow(values []interface{}) (map[string]interface{}, error
 			continue
 		}
 
-		// if int
+		// if int64
 		n, ok := v.(int64)
 		if ok {
 			result[fields[i]] = n
 			continue
 		}
 
-		return result, fmt.Errorf("unmapped type for model %s", b.Table)
+		return result, fmt.Errorf("unmapped value (%b) field type for %s for model %s", v, fields[i], b.Table)
 	}
 	return result, nil
 }
 
-func (b *Resource) parseRows(response *sql.Rows) ([]map[string]interface{}, error) {
-	results := make([]map[string]interface{}, 0)
+func (b *Resource) parseRows(response *sql.Rows) ([]map[string]any, error) {
+	results := make([]map[string]any, 0)
 	for response.Next() {
-		values := make([]interface{}, len(b.Fields))
-		scanArgs := make([]interface{}, len(b.Fields))
+		values := make([]any, len(b.Fields))
+		scanArgs := make([]any, len(b.Fields))
 		for i := range values {
 			scanArgs[i] = &values[i]
 		}
@@ -189,10 +213,10 @@ func (b *Resource) Delete(id string) error {
 }
 
 // Insert inserts a new row into the database
-func (b *Resource) Insert(data map[string]interface{}) error {
+func (b *Resource) Insert(data map[string]any) error {
 	in := strings.TrimSuffix(strings.Repeat("?,", len(data)), ",")
 	fields := make([]string, len(data))
-	values := make([]interface{}, len(data))
+	values := make([]any, len(data))
 	i := 0
 	for key, element := range data {
 		fields[i] = key
@@ -207,9 +231,9 @@ func (b *Resource) Insert(data map[string]interface{}) error {
 
 // Update updates a row in the database
 // data must contain the primary key
-func (b *Resource) Update(data map[string]interface{}) (int64, error) {
+func (b *Resource) Update(data map[string]any) (int64, error) {
 	fields := make([]string, len(data))
-	values := make([]interface{}, len(data))
+	values := make([]any, len(data))
 	i := 0
 	for key, element := range data {
 		fields[i] = key
@@ -231,7 +255,7 @@ func (b *Resource) Update(data map[string]interface{}) (int64, error) {
 }
 
 // FindFromBelongsTo finds all rows of a model with the belongsTo relationship
-func (b *Resource) FindFromBelongsTo(id interface{}, belongsTo BelongsTo) ([]map[string]interface{}, error) {
+func (b *Resource) FindFromBelongsTo(id any, belongsTo BelongsTo) ([]map[string]any, error) {
 	fields := b.GetFieldNames()
 
 	response, err := db.Query(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ?`, strings.Join(fields, ","), b.Table, belongsTo.Field), id)
@@ -243,12 +267,12 @@ func (b *Resource) FindFromBelongsTo(id interface{}, belongsTo BelongsTo) ([]map
 }
 
 // Search searches for rows in the database with where clauses
-func (b *Resource) Search(query map[string][]string) ([]map[string]interface{}, error) {
+func (b *Resource) Search(query map[string][]string) ([]map[string]any, error) {
 	fields := b.GetFieldNames()
 
 	// build query
 	where := make([]string, len(query))
-	values := make([]interface{}, 0)
+	values := make([]any, 0)
 	i := 0
 	for field, value := range query {
 		if len(value) == 1 {

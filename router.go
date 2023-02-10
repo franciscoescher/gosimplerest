@@ -71,7 +71,7 @@ func GetHandler(resource Resource) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 
 		// validates id
-		err := validateField(resource, resource.PrimaryKey, id)
+		err := resource.ValidateField(resource.PrimaryKey, id)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -99,7 +99,7 @@ func DeleteHandler(resource Resource) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 
 		// validates id
-		err := validateField(resource, resource.PrimaryKey, id)
+		err := resource.ValidateField(resource.PrimaryKey, id)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -147,7 +147,7 @@ func CreateHandler(resource Resource) http.HandlerFunc {
 				return
 			}
 			// validates fields
-			err := validateField(resource, key, data[key])
+			err := resource.ValidateField(key, data[key])
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				return
@@ -206,31 +206,13 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 	}
 }
 
-// unmarschalBody converts the body of the request to a map of strings and interfaces
-func unmarschalBody(r *http.Request) (map[string]interface{}, error) {
-	b := new(bytes.Buffer)
-	b.ReadFrom(r.Body)
-	var objmap map[string]interface{}
-	err := json.Unmarshal(b.Bytes(), &objmap)
-	return objmap, err
-}
-
-func validateField(resource Resource, field string, value interface{}) error {
-	vf := resource.Fields[field].Validator
-	if vf != nil {
-		err := vf(field, value)
-		return err
-	}
-	return nil
-}
-
 // GetBelongsToHandler returns a handler for the GET method of the belongs to relationship
 func GetBelongsToHandler(resource Resource, belongsTo BelongsTo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 
 		// validates id
-		err := validateField(resource, resource.PrimaryKey, id)
+		err := resource.ValidateField(resource.PrimaryKey, id)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -259,14 +241,15 @@ func SearchHandler(resource Resource) http.HandlerFunc {
 
 		// validates that all fields in data are in the model
 		for key := range query {
-			if !resource.HasField(key) {
-				logrus.Error(fmt.Errorf("field %s unkown", key))
+			// validates fields
+			if !resource.IsSearchable(key) {
+				json.NewEncoder(w).Encode(fmt.Sprintf("%s is not searchable", key))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
+			// validates values
 			for _, v := range query[key] {
-				// validates fields
-				err := validateField(resource, key, v)
+				err := resource.ValidateField(key, v)
 				if err != nil {
 					logrus.Error(err)
 					w.WriteHeader(http.StatusBadRequest)
@@ -277,16 +260,25 @@ func SearchHandler(resource Resource) http.HandlerFunc {
 
 		result, err := resource.Search(query)
 		if err != nil {
-			if err.Error() == "sql: no rows in result set" {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if len(result) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
 		json.NewEncoder(w).Encode(result)
 		w.Header().Set("Content-Type", "application/json")
 	}
+}
+
+// unmarschalBody converts the body of the request to a map of strings and interfaces
+func unmarschalBody(r *http.Request) (map[string]any, error) {
+	b := new(bytes.Buffer)
+	b.ReadFrom(r.Body)
+	var objmap map[string]any
+	err := json.Unmarshal(b.Bytes(), &objmap)
+	return objmap, err
 }
