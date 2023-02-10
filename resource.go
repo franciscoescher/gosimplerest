@@ -47,6 +47,9 @@ type BelongsTo struct {
 	Field string
 }
 
+// ValidatorFunc is a function that validates a field
+// This function should expect the value to be either string (for the query routes) or
+// the format that the database driver expects (for the insert/update routes)
 type ValidatorFunc func(field string, val any) error
 
 // HasField returns true if the model has the given field

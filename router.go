@@ -133,22 +133,25 @@ func CreateHandler(resource Resource) http.HandlerFunc {
 		if resource.CreatedAtField.Valid {
 			data[resource.CreatedAtField.String] = time.Now()
 		}
-		if resource.SoftDeleteField.Valid {
-			data[resource.SoftDeleteField.String] = nil
-		}
 		if resource.UpdatedAtField.Valid {
 			data[resource.UpdatedAtField.String] = time.Now()
 		}
+		if resource.SoftDeleteField.Valid {
+			data[resource.SoftDeleteField.String] = nil
+		}
 
-		// validates that all fields in data are in the model
+		// perform data validation
 		for key := range data {
+			// validates field exists in the model
 			if !resource.HasField(key) {
+				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			// validates fields
+			// validates value
 			err := resource.ValidateField(key, data[key])
 			if err != nil {
+				logrus.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -175,6 +178,7 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 			return
 		}
 
+		// primary key is required
 		_, ok := data[resource.PrimaryKey]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
@@ -185,9 +189,18 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 			data[resource.UpdatedAtField.String] = time.Now()
 		}
 
-		// validates that all fields in data are in the model
+		// perform data validation
 		for key := range data {
+			// validates field exists in the model
 			if !resource.HasField(key) {
+				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			// validates value
+			err := resource.ValidateField(key, data[key])
+			if err != nil {
+				logrus.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}

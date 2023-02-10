@@ -72,9 +72,9 @@ var UserResource = gosimplerest.Resource{
 		"last_name":   {Validator: validateLenght(1)},
 		"phone":       {},
 		"credit_card": {Unsearchable: true},
-		"created_at":  {Validator: validateTime},
-		"deleted_at":  {Validator: validateTime},
-		"updated_at":  {Validator: validateTime},
+		"created_at":  {Validator: validateNullableTime},
+		"deleted_at":  {Validator: validateNullableTime},
+		"updated_at":  {Validator: validateNullableTime},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
@@ -90,12 +90,12 @@ var RentEventResource = gosimplerest.Resource{
 		"vehicle_id":    {Validator: validateUUID},
 		"starting_time": {Validator: validateTime},
 		"hours":         {Validator: validateIntPositive},
-		"checkin_time":  {Validator: validateTime},
-		"dropoff_time":  {Validator: validateTime},
-		"cancel_time":   {Validator: validateTime},
-		"created_at":    {Validator: validateTime},
-		"deleted_at":    {Validator: validateTime},
-		"updated_at":    {Validator: validateTime},
+		"checkin_time":  {Validator: validateNullableTime},
+		"dropoff_time":  {Validator: validateNullableTime},
+		"cancel_time":   {Validator: validateNullableTime},
+		"created_at":    {Validator: validateNullableTime},
+		"deleted_at":    {Validator: validateNullableTime},
+		"updated_at":    {Validator: validateNullableTime},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
@@ -117,9 +117,9 @@ var VehicleResource = gosimplerest.Resource{
 		"year":           {Validator: validateIntPositive},
 		"price_per_hour": {},
 		"lot":            {Validator: validateIntPositive},
-		"created_at":     {Validator: validateTime},
-		"deleted_at":     {Validator: validateTime},
-		"updated_at":     {Validator: validateTime},
+		"created_at":     {Validator: validateNullableTime},
+		"deleted_at":     {Validator: validateNullableTime},
+		"updated_at":     {Validator: validateNullableTime},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
@@ -156,22 +156,47 @@ func validateTime(field string, val any) error {
 	if val == nil {
 		return fmt.Errorf("%s can't be null", field)
 	}
-	_, err := time.Parse(time.RFC3339, val.(string))
-	if err != nil {
+	// if in query
+	if v, ok := val.(string); ok {
+		_, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return fmt.Errorf("%s is invalid: %s", field, v)
+		}
+	}
+	// if in body
+	_, ok := val.(time.Time)
+	if !ok {
 		return fmt.Errorf("%s is invalid: %s", field, val)
 	}
 	return nil
 }
 
+func validateNullableTime(field string, val any) error {
+	if val == nil {
+		return nil
+	}
+	return validateTime(field, val)
+}
+
 func validateLenght(i int) gosimplerest.ValidatorFunc {
 	return func(field string, val any) error {
-		s, ok := val.(string)
-		if !ok {
-			return fmt.Errorf("%s is invalid: %s", field, val)
+		s := ""
+		// if in body
+		n, ok := val.(int64)
+		if ok {
+			s = strconv.FormatInt(n, 10)
+		} else {
+			// if in query
+			s, ok = val.(string)
+			if !ok {
+				return fmt.Errorf("%s is invalid: %s", field, val)
+			}
 		}
+
 		if len(s) < i {
 			return fmt.Errorf("%s must have %d characters: %s", field, i, val)
 		}
+
 		return nil
 	}
 }
