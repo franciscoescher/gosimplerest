@@ -242,7 +242,7 @@ func (b *Resource) FindFromBelongsTo(id interface{}, belongsTo BelongsTo) ([]map
 	return b.parseRows(response)
 }
 
-// FindFromBelongsTo finds all rows of a model with the belongsTo relationship
+// Search searches for rows in the database with where clauses
 func (b *Resource) Search(query map[string][]string) ([]map[string]interface{}, error) {
 	fields := b.GetFieldNames()
 
