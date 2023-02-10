@@ -18,22 +18,24 @@ import (
 DROP TABLE IF EXISTS `users`;
 
 CREATE TABLE `users` (
-	`id` varchar(191) NOT NULL,
+	`uuid` varchar(191) NOT NULL,
 	`created_at` datetime(3) DEFAULT NULL,
-	`name` varchar(255) DEFAULT NULL,
-	`contact` varchar(255) DEFAULT NULL,
+	`deleted_at` datetime(3) DEFAULT NULL,
+	`first_name` varchar(255) DEFAULT NULL,
+	`phone` varchar(255) DEFAULT NULL,
 	PRIMARY KEY (`uuid`)
 );
 */
 
 var UserResource = gosimplerest.Resource{
 	Table:      "users",
-	PrimaryKey: "id",
+	PrimaryKey: "uuid",
 	Fields: map[string]gosimplerest.Field{
-		"id":         {},
-		"name":       {},
-		"contact":    {},
+		"uuid":       {},
+		"first_name": {},
+		"phone":      {},
 		"created_at": {},
+		"deleted_at": {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 }
