@@ -1,12 +1,14 @@
 # Go Simple Rest
 
-This package provides an out of the box implementation of a rest api router for go.
+This package provides an out of the box implementation of a rest api router for go, with simple configuration of the resources (tables in the database).
 
-The database is written for sql but can be easily modified to work with other.
+Currently contains implementation using sql as database and logrus as logger.
 
-It uses gorilla mux as router and logrus as logger.
+The api will create endpoints for each resource configuration provided to the Add<Router>Handlers functions.
 
-The api will create endpoints for each resource provided to the AddGorillaMuxHandlers function.
+Currently supported routers are gin and gorilla mux.
+
+To resource configuration can be see in the `resource.go` file, in the `Resource` struct.
 
 It creates the following routes (models are table names of the resources, converted to kebab case):
 - GET /model/{id}

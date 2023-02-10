@@ -3,14 +3,12 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/franciscoescher/gosimplerest"
+	"github.com/gin-gonic/gin"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/guregu/null.v3"
 )
@@ -49,22 +47,14 @@ func main() {
 	defer db.Close()
 
 	// create routes for rest api
-	r := mux.NewRouter()
-	r = gosimplerest.AddGorillaMuxHandlers(
+	r := gin.Default()
+	gosimplerest.AddGinHandlers(
 		r,
 		db,
 		logger,
-		[]gosimplerest.Resource{UserResource},
-		nil)
+		[]gosimplerest.Resource{UserResource})
 
-	// start server
-	srv := &http.Server{
-		Addr:         "127.0.0.1:3333",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-		Handler:      r,
-	}
-	logrus.Fatal(srv.ListenAndServe())
+	logrus.Fatal(r.Run(":3333"))
 }
 
 func getDB() *sql.DB {
