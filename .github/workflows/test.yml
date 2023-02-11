@@ -1,6 +1,11 @@
 name: Test
 
-on: [workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,10 +21,11 @@ jobs:
         with:
           mysql-version: '8.0'
       - run: >
-          mysql -uroot -h127.0.0.1 -e << "EOF"
-            CREATE DATABASE IF NOT EXISTS users_test;
+          mysql -uroot -h127.0.0.1 << "EOF"
+            CREATE DATABASE IF NOT EXISTS test_database;
+            USE test_database;
             DROP TABLE IF EXISTS `users`;
-            CREATE TABLE `users` (
+            CREATE TABLE `users_test` (
               `uuid` varchar(191) NOT NULL,
               `created_at` datetime(3) DEFAULT NULL,
               `deleted_at` datetime(3) DEFAULT NULL,
@@ -34,4 +40,4 @@ jobs:
           go-version: 1.19
 
       - name: Run tests
-        run: DB_USER_TEST=root DB_HOSTNAME_TEST=127.0.0.1 DB_PORT_TEST=3306 DB_SCHEMA_TEST=users_test go test
+        run: DB_USER_TEST=root DB_HOSTNAME_TEST=127.0.0.1 DB_PORT_TEST=3306 DB_SCHEMA_TEST=test_database go test
