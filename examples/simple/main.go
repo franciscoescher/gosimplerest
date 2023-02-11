@@ -37,7 +37,8 @@ var UserResource = gosimplerest.Resource{
 		"created_at": {},
 		"deleted_at": {},
 	},
-	SoftDeleteField: null.NewString("deleted_at", true),
+	SoftDeleteField:  null.NewString("deleted_at", true),
+	OmmitSearchRoute: true,
 }
 
 func main() {

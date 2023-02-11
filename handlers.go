@@ -13,6 +13,9 @@ import (
 
 // RetrieveHandler returns a handler for the GET method
 func RetrieveHandler(base Base) http.HandlerFunc {
+	if base.Resource.OmmitRetrieveRoute {
+		return NotFoundHandler
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
@@ -43,6 +46,9 @@ func RetrieveHandler(base Base) http.HandlerFunc {
 
 // DeleteHandler returns a handler for the DELETE method
 func DeleteHandler(base Base) http.HandlerFunc {
+	if base.Resource.OmmitDeleteRoute {
+		return NotFoundHandler
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
@@ -69,6 +75,9 @@ func DeleteHandler(base Base) http.HandlerFunc {
 
 // CreateHandler returns a handler for the POST method
 func CreateHandler(base Base) http.HandlerFunc {
+	if base.Resource.OmmitCreateRoute {
+		return NotFoundHandler
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarschalBody(r)
 		if err != nil {
@@ -118,14 +127,11 @@ func CreateHandler(base Base) http.HandlerFunc {
 	}
 }
 
-func encodeJsonError(w http.ResponseWriter, msg string) {
-	json.NewEncoder(w).Encode(map[string]any{
-		"error": msg,
-	})
-}
-
 // UpdateHandler returns a handler for the PUT method
 func UpdateHandler(base Base) http.HandlerFunc {
+	if base.Resource.OmmitUpdateRoute {
+		return NotFoundHandler
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarschalBody(r)
 		if err != nil {
@@ -178,6 +184,9 @@ func UpdateHandler(base Base) http.HandlerFunc {
 
 // GetBelongsToHandler returns a handler for the GET method of the belongs to relationship
 func GetBelongsToHandler(base Base, belongsTo BelongsTo) http.HandlerFunc {
+	if base.Resource.OmmitBelongsToRoutes {
+		return NotFoundHandler
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
@@ -207,6 +216,9 @@ func GetBelongsToHandler(base Base, belongsTo BelongsTo) http.HandlerFunc {
 
 // SearchHandler returns a handler for the GET method with query params
 func SearchHandler(base Base) http.HandlerFunc {
+	if base.Resource.OmmitSearchRoute {
+		return NotFoundHandler
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 
@@ -251,4 +263,15 @@ func unmarschalBody(r *http.Request) (map[string]any, error) {
 	var objmap map[string]any
 	err := json.Unmarshal(b.Bytes(), &objmap)
 	return objmap, err
+}
+
+// encodeJsonError encodes an error message in json to the response writer
+func encodeJsonError(w http.ResponseWriter, msg string) {
+	json.NewEncoder(w).Encode(map[string]any{
+		"error": msg,
+	})
+}
+
+func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
 }
