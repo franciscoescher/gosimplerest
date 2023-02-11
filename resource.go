@@ -9,8 +9,15 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/sirupsen/logrus"
 	null "gopkg.in/guregu/null.v3"
 )
+
+type Base struct {
+	Logger   *logrus.Logger
+	DB       *sql.DB
+	Resource *Resource
+}
 
 // Resource represents a database table
 type Resource struct {
@@ -101,10 +108,10 @@ func (b *Resource) GetFieldNames() []string {
 }
 
 // Find returns a single row from the database, search by the primary key
-func (b *Resource) Find(id any) (map[string]any, error) {
+func (b *Resource) Find(base Base, id any) (map[string]any, error) {
 	fields := b.GetFieldNames()
 
-	response := db.QueryRow(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ? LIMIT 1`, strings.Join(fields, ","), b.Table, b.PrimaryKey), id)
+	response := base.DB.QueryRow(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ? LIMIT 1`, strings.Join(fields, ","), b.Table, b.PrimaryKey), id)
 
 	result := make(map[string]any, len(b.Fields))
 	values := make([]any, len(b.Fields))
@@ -194,16 +201,16 @@ func (b *Resource) parseRows(response *sql.Rows) ([]map[string]any, error) {
 }
 
 // Delete deletes a row with the given primary key from the database
-func (b *Resource) Delete(id string) error {
+func (b *Resource) Delete(base Base, id string) error {
 	var result sql.Result
 	err := error(nil)
 	if b.SoftDeleteField.Valid {
-		result, err = db.Exec(fmt.Sprintf(`UPDATE %s SET %s = NOW() WHERE %s=?`, b.Table, b.SoftDeleteField.String, b.PrimaryKey), id)
+		result, err = base.DB.Exec(fmt.Sprintf(`UPDATE %s SET %s = NOW() WHERE %s=?`, b.Table, b.SoftDeleteField.String, b.PrimaryKey), id)
 		if err != nil {
 			return err
 		}
 	} else {
-		result, err = db.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id=?`, b.Table), id)
+		result, err = base.DB.Exec(fmt.Sprintf(`DELETE FROM %s WHERE id=?`, b.Table), id)
 		if err != nil {
 			return err
 		}
@@ -219,7 +226,7 @@ func (b *Resource) Delete(id string) error {
 }
 
 // Insert inserts a new row into the database
-func (b *Resource) Insert(data map[string]any) error {
+func (b *Resource) Insert(base Base, data map[string]any) error {
 	in := strings.TrimSuffix(strings.Repeat("?,", len(data)), ",")
 	fields := make([]string, len(data))
 	values := make([]any, len(data))
@@ -231,13 +238,13 @@ func (b *Resource) Insert(data map[string]any) error {
 	}
 
 	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, b.Table, strings.Join(fields, ","), in)
-	_, err := db.Exec(sql, values...)
+	_, err := base.DB.Exec(sql, values...)
 	return err
 }
 
 // Update updates a row in the database
 // data must contain the primary key
-func (b *Resource) Update(data map[string]any) (int64, error) {
+func (b *Resource) Update(base Base, data map[string]any) (int64, error) {
 	fields := make([]string, len(data))
 	values := make([]any, len(data))
 	i := 0
@@ -249,7 +256,7 @@ func (b *Resource) Update(data map[string]any) (int64, error) {
 	values = append(values, data[b.PrimaryKey])
 
 	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE %s=?`, b.Table, strings.Join(fields, "=?,")+"=?", b.PrimaryKey)
-	result, err := db.Exec(sql, values...)
+	result, err := base.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err
 	}
@@ -261,10 +268,10 @@ func (b *Resource) Update(data map[string]any) (int64, error) {
 }
 
 // FindFromBelongsTo finds all rows of a model with the belongsTo relationship
-func (b *Resource) FindFromBelongsTo(id any, belongsTo BelongsTo) ([]map[string]any, error) {
+func (b *Resource) FindFromBelongsTo(base Base, id any, belongsTo BelongsTo) ([]map[string]any, error) {
 	fields := b.GetFieldNames()
 
-	response, err := db.Query(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ?`, strings.Join(fields, ","), b.Table, belongsTo.Field), id)
+	response, err := base.DB.Query(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ?`, strings.Join(fields, ","), b.Table, belongsTo.Field), id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return make([]map[string]any, 0), nil
@@ -276,7 +283,7 @@ func (b *Resource) FindFromBelongsTo(id any, belongsTo BelongsTo) ([]map[string]
 }
 
 // Search searches for rows in the database with where clauses
-func (b *Resource) Search(query map[string][]string) ([]map[string]any, error) {
+func (b *Resource) Search(base Base, query map[string][]string) ([]map[string]any, error) {
 	fields := b.GetFieldNames()
 
 	// build query
@@ -299,7 +306,7 @@ func (b *Resource) Search(query map[string][]string) ([]map[string]any, error) {
 	if len(where) > 0 {
 		whereStr = "WHERE " + strings.Join(where, " AND ")
 	}
-	response, err := db.Query(fmt.Sprintf(`SELECT %s FROM %s %s`, strings.Join(fields, ","), b.Table, whereStr), values...)
+	response, err := base.DB.Query(fmt.Sprintf(`SELECT %s FROM %s %s`, strings.Join(fields, ","), b.Table, whereStr), values...)
 	if err != nil {
 		return nil, err
 	}

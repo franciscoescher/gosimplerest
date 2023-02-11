@@ -12,55 +12,55 @@ import (
 )
 
 // GetHandler returns a handler for the GET method
-func GetHandler(resource Resource) http.HandlerFunc {
+func GetHandler(base Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
 		// validates id
-		err := resource.ValidateField(resource.PrimaryKey, id)
+		err := base.Resource.ValidateField(base.Resource.PrimaryKey, id)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		result, err := resource.Find(id)
+		result, err := base.Resource.Find(base, id)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		if len(result) == 0 {
 			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode("not found")
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
 	}
 }
 
 // DeleteHandler returns a handler for the DELETE method
-func DeleteHandler(resource Resource) http.HandlerFunc {
+func DeleteHandler(base Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
 		// validates id
-		err := resource.ValidateField(resource.PrimaryKey, id)
+		err := base.Resource.ValidateField(base.Resource.PrimaryKey, id)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		err = resource.Delete(id)
+		err = base.Resource.Delete(base, id)
 		if err != nil {
 			if err.Error() == "no rows affected" {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -68,37 +68,37 @@ func DeleteHandler(resource Resource) http.HandlerFunc {
 }
 
 // CreateHandler returns a handler for the POST method
-func CreateHandler(resource Resource) http.HandlerFunc {
+func CreateHandler(base Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarschalBody(r)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		pk := resource.GeneratePrimaryKey()
-		data[resource.PrimaryKey] = pk
-		if resource.CreatedAtField.Valid {
-			data[resource.CreatedAtField.String] = time.Now()
+		pk := base.Resource.GeneratePrimaryKey()
+		data[base.Resource.PrimaryKey] = pk
+		if base.Resource.CreatedAtField.Valid {
+			data[base.Resource.CreatedAtField.String] = time.Now()
 		}
-		if resource.UpdatedAtField.Valid {
-			data[resource.UpdatedAtField.String] = time.Now()
+		if base.Resource.UpdatedAtField.Valid {
+			data[base.Resource.UpdatedAtField.String] = time.Now()
 		}
-		if resource.SoftDeleteField.Valid {
-			data[resource.SoftDeleteField.String] = nil
+		if base.Resource.SoftDeleteField.Valid {
+			data[base.Resource.SoftDeleteField.String] = nil
 		}
 
 		// perform data validation
 		for key := range data {
 			// validates field exists in the model
-			if !resource.HasField(key) {
+			if !base.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
 				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
 				return
 			}
 			// validates value
-			err := resource.ValidateField(key, data[key])
+			err := base.Resource.ValidateField(key, data[key])
 			if err != nil {
 				logrus.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
@@ -106,9 +106,9 @@ func CreateHandler(resource Resource) http.HandlerFunc {
 			}
 		}
 
-		err = resource.Insert(data)
+		err = base.Resource.Insert(base, data)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -118,37 +118,37 @@ func CreateHandler(resource Resource) http.HandlerFunc {
 }
 
 // UpdateHandler returns a handler for the PUT method
-func UpdateHandler(resource Resource) http.HandlerFunc {
+func UpdateHandler(base Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarschalBody(r)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		// primary key is required
-		_, ok := data[resource.PrimaryKey]
+		_, ok := data[base.Resource.PrimaryKey]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode("primery key is required")
 			return
 		}
 
-		if resource.UpdatedAtField.Valid {
-			data[resource.UpdatedAtField.String] = time.Now()
+		if base.Resource.UpdatedAtField.Valid {
+			data[base.Resource.UpdatedAtField.String] = time.Now()
 		}
 
 		// perform data validation
 		for key := range data {
 			// validates field exists in the model
-			if !resource.HasField(key) {
+			if !base.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
 				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
 				return
 			}
 			// validates value
-			err := resource.ValidateField(key, data[key])
+			err := base.Resource.ValidateField(key, data[key])
 			if err != nil {
 				logrus.Error(err)
 				w.WriteHeader(http.StatusBadRequest)
@@ -156,9 +156,9 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 			}
 		}
 
-		affected, err := resource.Update(data)
+		affected, err := base.Resource.Update(base, data)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -170,21 +170,21 @@ func UpdateHandler(resource Resource) http.HandlerFunc {
 }
 
 // GetBelongsToHandler returns a handler for the GET method of the belongs to relationship
-func GetBelongsToHandler(resource Resource, belongsTo BelongsTo) http.HandlerFunc {
+func GetBelongsToHandler(base Base, belongsTo BelongsTo) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
 		// validates id
-		err := resource.ValidateField(resource.PrimaryKey, id)
+		err := base.Resource.ValidateField(base.Resource.PrimaryKey, id)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		result, err := resource.FindFromBelongsTo(id, belongsTo)
+		result, err := base.Resource.FindFromBelongsTo(base, id, belongsTo)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -194,27 +194,26 @@ func GetBelongsToHandler(resource Resource, belongsTo BelongsTo) http.HandlerFun
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
 	}
 }
 
 // SearchHandler returns a handler for the GET method with query params
-func SearchHandler(resource Resource) http.HandlerFunc {
+func SearchHandler(base Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 
 		// validates that all fields in data are in the model
 		for key := range query {
 			// validates fields
-			if !resource.IsSearchable(key) {
+			if !base.Resource.IsSearchable(key) {
 				w.WriteHeader(http.StatusBadRequest)
 				json.NewEncoder(w).Encode(fmt.Sprintf("%s is not searchable", key))
 				return
 			}
 			// validates values
 			for _, v := range query[key] {
-				err := resource.ValidateField(key, v)
+				err := base.Resource.ValidateField(key, v)
 				if err != nil {
 					logrus.Error(err)
 					w.WriteHeader(http.StatusBadRequest)
@@ -223,9 +222,9 @@ func SearchHandler(resource Resource) http.HandlerFunc {
 			}
 		}
 
-		result, err := resource.Search(query)
+		result, err := base.Resource.Search(base, query)
 		if err != nil {
-			logger.Error(err)
+			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -234,7 +233,6 @@ func SearchHandler(resource Resource) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
 	}
 }

@@ -11,22 +11,20 @@ import (
 )
 
 func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, resources []Resource, mid func(h http.Handler) http.HandlerFunc) *mux.Router {
-	db = d
-	logger = l
-
 	for _, resource := range resources {
+		base := Base{Logger: l, DB: d, Resource: &resource}
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resource.Table))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
-		r.HandleFunc(nameID, GorillaMiddelwares(mid, GetHandler(resource))).Methods(http.MethodGet)
-		r.HandleFunc(nameID, GorillaMiddelwares(mid, DeleteHandler(resource))).Methods(http.MethodDelete)
-		r.HandleFunc(name, GorillaMiddelwares(mid, CreateHandler(resource))).Methods(http.MethodPost)
-		r.HandleFunc(name, GorillaMiddelwares(mid, UpdateHandler(resource))).Methods(http.MethodPut)
-		r.HandleFunc(name, GorillaMiddelwares(mid, SearchHandler(resource))).Methods(http.MethodGet)
+		r.HandleFunc(nameID, GorillaMiddelwares(mid, GetHandler(base))).Methods(http.MethodGet)
+		r.HandleFunc(nameID, GorillaMiddelwares(mid, DeleteHandler(base))).Methods(http.MethodDelete)
+		r.HandleFunc(name, GorillaMiddelwares(mid, CreateHandler(base))).Methods(http.MethodPost)
+		r.HandleFunc(name, GorillaMiddelwares(mid, UpdateHandler(base))).Methods(http.MethodPut)
+		r.HandleFunc(name, GorillaMiddelwares(mid, SearchHandler(base))).Methods(http.MethodGet)
 
 		for _, belongsTo := range resource.BelongsToFields {
 			nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
-			r.HandleFunc(nameBelongsTo, GorillaMiddelwares(mid, GetBelongsToHandler(resource, belongsTo))).Methods(http.MethodGet)
+			r.HandleFunc(nameBelongsTo, GorillaMiddelwares(mid, GetBelongsToHandler(base, belongsTo))).Methods(http.MethodGet)
 		}
 	}
 	return r

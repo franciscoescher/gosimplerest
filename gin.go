@@ -11,21 +11,20 @@ import (
 )
 
 func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, resources []Resource, mid ...gin.HandlerFunc) {
-	db = d
-	logger = l
 
 	for _, resource := range resources {
+		base := Base{Logger: l, DB: d, Resource: &resource}
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resource.Table))
 		nameID := fmt.Sprintf("%s/:id", name)
-		r.GET(nameID, GinGetHandlersChain(GetHandler(resource), mid...)...)
-		r.DELETE(nameID, GinGetHandlersChain(DeleteHandler(resource), mid...)...)
-		r.POST(name, GinGetHandlersChain(CreateHandler(resource), mid...)...)
-		r.PUT(name, GinGetHandlersChain(UpdateHandler(resource), mid...)...)
-		r.GET(name, GinGetHandlersChain(SearchHandler(resource), mid...)...)
+		r.GET(nameID, GinGetHandlersChain(GetHandler(base), mid...)...)
+		r.DELETE(nameID, GinGetHandlersChain(DeleteHandler(base), mid...)...)
+		r.POST(name, GinGetHandlersChain(CreateHandler(base), mid...)...)
+		r.PUT(name, GinGetHandlersChain(UpdateHandler(base), mid...)...)
+		r.GET(name, GinGetHandlersChain(SearchHandler(base), mid...)...)
 
 		for _, belongsTo := range resource.BelongsToFields {
 			nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
-			r.GET(nameBelongsTo, GinGetHandlersChain(GetBelongsToHandler(resource, belongsTo), mid...)...)
+			r.GET(nameBelongsTo, GinGetHandlersChain(GetBelongsToHandler(base, belongsTo), mid...)...)
 		}
 	}
 }
