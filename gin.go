@@ -16,10 +16,10 @@ func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, resources []Reso
 		base := Base{Logger: l, DB: d, Resource: &resource}
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resource.Table))
 		nameID := fmt.Sprintf("%s/:id", name)
-		r.GET(nameID, GinGetHandlersChain(GetHandler(base), mid...)...)
-		r.DELETE(nameID, GinGetHandlersChain(DeleteHandler(base), mid...)...)
 		r.POST(name, GinGetHandlersChain(CreateHandler(base), mid...)...)
+		r.GET(nameID, GinGetHandlersChain(RetrieveHandler(base), mid...)...)
 		r.PUT(name, GinGetHandlersChain(UpdateHandler(base), mid...)...)
+		r.DELETE(nameID, GinGetHandlersChain(DeleteHandler(base), mid...)...)
 		r.GET(name, GinGetHandlersChain(SearchHandler(base), mid...)...)
 
 		for _, belongsTo := range resource.BelongsToFields {

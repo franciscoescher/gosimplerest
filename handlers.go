@@ -11,8 +11,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// GetHandler returns a handler for the GET method
-func GetHandler(base Base) http.HandlerFunc {
+// RetrieveHandler returns a handler for the GET method
+func RetrieveHandler(base Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
@@ -33,7 +33,7 @@ func GetHandler(base Base) http.HandlerFunc {
 
 		if len(result) == 0 {
 			w.WriteHeader(http.StatusNotFound)
-			json.NewEncoder(w).Encode("not found")
+			encodeJsonError(w, "not found")
 			return
 		}
 
@@ -94,7 +94,7 @@ func CreateHandler(base Base) http.HandlerFunc {
 			// validates field exists in the model
 			if !base.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
+				encodeJsonError(w, fmt.Sprintf("%s not in the model", key))
 				return
 			}
 			// validates value
@@ -113,8 +113,15 @@ func CreateHandler(base Base) http.HandlerFunc {
 			return
 		}
 
-		json.NewEncoder(w).Encode(pk)
+		result := map[string]any{base.Resource.PrimaryKey: pk}
+		json.NewEncoder(w).Encode(result)
 	}
+}
+
+func encodeJsonError(w http.ResponseWriter, msg string) {
+	json.NewEncoder(w).Encode(map[string]any{
+		"error": msg,
+	})
 }
 
 // UpdateHandler returns a handler for the PUT method
@@ -131,7 +138,7 @@ func UpdateHandler(base Base) http.HandlerFunc {
 		_, ok := data[base.Resource.PrimaryKey]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode("primery key is required")
+			encodeJsonError(w, "primery key is required")
 			return
 		}
 
@@ -144,7 +151,7 @@ func UpdateHandler(base Base) http.HandlerFunc {
 			// validates field exists in the model
 			if !base.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(fmt.Sprintf("%s not in the model", key))
+				encodeJsonError(w, fmt.Sprintf("%s not in the model", key))
 				return
 			}
 			// validates value
@@ -208,7 +215,7 @@ func SearchHandler(base Base) http.HandlerFunc {
 			// validates fields
 			if !base.Resource.IsSearchable(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(fmt.Sprintf("%s is not searchable", key))
+				encodeJsonError(w, fmt.Sprintf("%s is not searchable", key))
 				return
 			}
 			// validates values

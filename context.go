@@ -12,7 +12,19 @@ const (
 )
 
 func ReadParams(r *http.Request, s string) string {
-	return r.Context().Value(ContextKeyParams).(map[string]string)[s]
+	params := r.Context().Value(ContextKeyParams)
+	if params == nil {
+		return ""
+	}
+	values, ok := r.Context().Value(ContextKeyParams).(map[string]string)
+	if !ok {
+		return ""
+	}
+	val, ok := values[s]
+	if !ok {
+		return ""
+	}
+	return val
 }
 
 func GetRequestWithParams(r *http.Request, params map[string]string) *http.Request {

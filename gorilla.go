@@ -16,10 +16,10 @@ func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, resources
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resource.Table))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
-		r.HandleFunc(nameID, GorillaMiddelwares(mid, GetHandler(base))).Methods(http.MethodGet)
-		r.HandleFunc(nameID, GorillaMiddelwares(mid, DeleteHandler(base))).Methods(http.MethodDelete)
 		r.HandleFunc(name, GorillaMiddelwares(mid, CreateHandler(base))).Methods(http.MethodPost)
+		r.HandleFunc(nameID, GorillaMiddelwares(mid, RetrieveHandler(base))).Methods(http.MethodGet)
 		r.HandleFunc(name, GorillaMiddelwares(mid, UpdateHandler(base))).Methods(http.MethodPut)
+		r.HandleFunc(nameID, GorillaMiddelwares(mid, DeleteHandler(base))).Methods(http.MethodDelete)
 		r.HandleFunc(name, GorillaMiddelwares(mid, SearchHandler(base))).Methods(http.MethodGet)
 
 		for _, belongsTo := range resource.BelongsToFields {
