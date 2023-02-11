@@ -16,7 +16,7 @@ jobs:
         with:
           mysql-version: '8.0'
       - run: >
-          mysql -uroot -h127.0.0.1 -e << "EOF"
+          mysql -uroot -h127.0.0.1 << "EOF"
             CREATE DATABASE IF NOT EXISTS users_test;
             DROP TABLE IF EXISTS `users`;
             CREATE TABLE `users` (
