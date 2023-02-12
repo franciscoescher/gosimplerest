@@ -13,7 +13,7 @@ import (
 
 // RetrieveHandler returns a handler for the GET method
 func RetrieveHandler(base Base) http.HandlerFunc {
-	if base.Resource.OmmitRetrieveRoute {
+	if base.Resource.OmitRetrieveRoute {
 		return NotFoundHandler
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +46,7 @@ func RetrieveHandler(base Base) http.HandlerFunc {
 
 // DeleteHandler returns a handler for the DELETE method
 func DeleteHandler(base Base) http.HandlerFunc {
-	if base.Resource.OmmitDeleteRoute {
+	if base.Resource.OmitDeleteRoute {
 		return NotFoundHandler
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +75,7 @@ func DeleteHandler(base Base) http.HandlerFunc {
 
 // CreateHandler returns a handler for the POST method
 func CreateHandler(base Base) http.HandlerFunc {
-	if base.Resource.OmmitCreateRoute {
+	if base.Resource.OmitCreateRoute {
 		return NotFoundHandler
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +129,7 @@ func CreateHandler(base Base) http.HandlerFunc {
 
 // UpdateHandler returns a handler for the PUT method
 func UpdateHandler(base Base) http.HandlerFunc {
-	if base.Resource.OmmitUpdateRoute {
+	if base.Resource.OmitUpdateRoute {
 		return NotFoundHandler
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +184,7 @@ func UpdateHandler(base Base) http.HandlerFunc {
 
 // GetBelongsToHandler returns a handler for the GET method of the belongs to relationship
 func GetBelongsToHandler(base Base, belongsTo BelongsTo) http.HandlerFunc {
-	if base.Resource.OmmitBelongsToRoutes {
+	if base.Resource.OmitBelongsToRoutes {
 		return NotFoundHandler
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -216,7 +216,7 @@ func GetBelongsToHandler(base Base, belongsTo BelongsTo) http.HandlerFunc {
 
 // SearchHandler returns a handler for the GET method with query params
 func SearchHandler(base Base) http.HandlerFunc {
-	if base.Resource.OmmitSearchRoute {
+	if base.Resource.OmitSearchRoute {
 		return NotFoundHandler
 	}
 	return func(w http.ResponseWriter, r *http.Request) {

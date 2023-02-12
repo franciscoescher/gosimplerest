@@ -42,13 +42,13 @@ type Resource struct {
 	// GeneratePrimaryKeyFunc is a function that generates a new primary key
 	// if null, the defaultGeneratePrimaryKeyFunc is used
 	GeneratePrimaryKeyFunc func() any
-	// Ommmit<Route Type>Route are flags that ommit the generation of the specific route from the router
-	OmmitCreateRoute     bool
-	OmmitRetrieveRoute   bool
-	OmmitUpdateRoute     bool
-	OmmitDeleteRoute     bool
-	OmmitSearchRoute     bool
-	OmmitBelongsToRoutes bool
+	// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
+	OmitCreateRoute     bool
+	OmitRetrieveRoute   bool
+	OmitUpdateRoute     bool
+	OmitDeleteRoute     bool
+	OmitSearchRoute     bool
+	OmitBelongsToRoutes bool
 }
 
 type Field struct {
