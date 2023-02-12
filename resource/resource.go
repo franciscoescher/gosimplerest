@@ -2,7 +2,9 @@ package resource
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"time"
@@ -21,43 +23,43 @@ type Base struct {
 // gosimplerest.Resource represents a database table
 type Resource struct {
 	// Table is the name of the table
-	Table string
+	Table string `json:"table"`
 	// PrimaryKey is the name of field that is the primary key
-	PrimaryKey string
+	PrimaryKey string `json:"primary_key"`
 	// Fields is a list of fields in the table
-	Fields map[string]Field
+	Fields map[string]Field `json:"fields"`
 	// SoftDeleteField is the name of the field that is used for soft deletes
 	// if null, no soft deletes are used
-	SoftDeleteField null.String
+	SoftDeleteField null.String `json:"soft_delete_field"`
 	// CreatedAtField is the name of the field that is used as createion timestamp
 	// if null, no creation timestamp is generated
-	CreatedAtField null.String
+	CreatedAtField null.String `json:"created_at_field"`
 	// UpdatedAtField is the name of the field that is used as update timestamp
 	// if null, no update timestamp is generated
-	UpdatedAtField null.String
+	UpdatedAtField null.String `json:"updated_at_field"`
 	// BelongsToFields is a list of fields represent a belonging relation with another table,
 	// usually also foreign keys to other tables
-	BelongsToFields []BelongsTo
+	BelongsToFields []BelongsTo `json:"belongs_to_fields"`
 	// GeneratePrimaryKeyFunc is a function that generates a new primary key
 	// if null, the defaultGeneratePrimaryKeyFunc is used
-	GeneratePrimaryKeyFunc func() any
+	GeneratePrimaryKeyFunc func() any `json:"-"`
 	// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
-	OmitCreateRoute     bool
-	OmitRetrieveRoute   bool
-	OmitUpdateRoute     bool
-	OmitDeleteRoute     bool
-	OmitSearchRoute     bool
-	OmitBelongsToRoutes bool
+	OmitCreateRoute     bool `json:"omit_create_route"`
+	OmitRetrieveRoute   bool `json:"omit_retrieve_route"`
+	OmitUpdateRoute     bool `json:"omit_update_route"`
+	OmitDeleteRoute     bool `json:"omit_delete_route"`
+	OmitSearchRoute     bool `json:"omit_search_route"`
+	OmitBelongsToRoutes bool `json:"omit_belongs_to_routes"`
 }
 
 type Field struct {
-	Validator    ValidatorFunc
-	Unsearchable bool
+	Validator    ValidatorFunc `json:"-"`
+	Unsearchable bool          `json:"unsearchable"`
 }
 
 type BelongsTo struct {
-	Table string
-	Field string
+	Table string `json:"table"`
+	Field string `json:"field"`
 }
 
 // ValidatorFunc is a function that validates a field
@@ -189,4 +191,12 @@ func (b *Resource) parseRows(rows *sql.Rows) ([]map[string]any, error) {
 		results = append(results, result)
 	}
 	return results, nil
+}
+
+func (b *Resource) FromJSON(filename string) error {
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal([]byte(file), &b)
 }

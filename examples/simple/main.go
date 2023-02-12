@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/guregu/null.v3"
 )
 
 // Mysql Schema
@@ -28,20 +27,6 @@ CREATE TABLE `users` (
 );
 */
 
-var UserResource = resource.Resource{
-	Table:      "users",
-	PrimaryKey: "uuid",
-	Fields: map[string]resource.Field{
-		"uuid":       {},
-		"first_name": {},
-		"phone":      {},
-		"created_at": {},
-		"deleted_at": {},
-	},
-	SoftDeleteField: null.NewString("deleted_at", true),
-	OmitSearchRoute: true,
-}
-
 func main() {
 	logger := logrus.New()
 
@@ -50,13 +35,20 @@ func main() {
 	db := getDB()
 	defer db.Close()
 
+	// load resource from json file
+	user := resource.Resource{}
+	err := user.FromJSON("./examples/simple/user.json")
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
 	// create routes for rest api
 	r := gin.Default()
 	gosimplerest.AddGinHandlers(
 		r,
 		db,
 		logger,
-		[]resource.Resource{UserResource})
+		[]resource.Resource{user})
 
 	logrus.Fatal(r.Run(":3333"))
 }
