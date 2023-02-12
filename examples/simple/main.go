@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/franciscoescher/gosimplerest"
+	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gin-gonic/gin"
 
 	"github.com/go-sql-driver/mysql"
@@ -27,10 +28,10 @@ CREATE TABLE `users` (
 );
 */
 
-var UserResource = gosimplerest.Resource{
+var UserResource = resource.Resource{
 	Table:      "users",
 	PrimaryKey: "uuid",
-	Fields: map[string]gosimplerest.Field{
+	Fields: map[string]resource.Field{
 		"uuid":       {},
 		"first_name": {},
 		"phone":      {},
@@ -55,7 +56,7 @@ func main() {
 		r,
 		db,
 		logger,
-		[]gosimplerest.Resource{UserResource})
+		[]resource.Resource{UserResource})
 
 	logrus.Fatal(r.Run(":3333"))
 }

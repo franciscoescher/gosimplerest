@@ -9,6 +9,7 @@ import (
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
+	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gin-gonic/gin"
 
 	"github.com/go-sql-driver/mysql"
@@ -27,7 +28,7 @@ func main() {
 	r := gin.Default()
 
 	// create routes for rest api
-	resources := []gosimplerest.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
+	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
 	gosimplerest.AddGinHandlers(r, db, logger, resources)
 
 	log.Fatal(r.Run(":3333"))

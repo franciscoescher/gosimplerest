@@ -5,26 +5,28 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/franciscoescher/gosimplerest/handlers"
+	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
 )
 
-func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, resources []Resource, mid ...gin.HandlerFunc) {
+func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, resources []resource.Resource, mid ...gin.HandlerFunc) {
 
-	for _, resource := range resources {
-		base := Base{Logger: l, DB: d, Resource: &resource}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resource.Table))
+	for i := range resources {
+		base := &resource.Base{Logger: l, DB: d, Resource: &resources[i]}
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
 		nameID := fmt.Sprintf("%s/:id", name)
-		r.POST(name, GinGetHandlersChain(CreateHandler(base), mid...)...)
-		r.GET(nameID, GinGetHandlersChain(RetrieveHandler(base), mid...)...)
-		r.PUT(name, GinGetHandlersChain(UpdateHandler(base), mid...)...)
-		r.DELETE(nameID, GinGetHandlersChain(DeleteHandler(base), mid...)...)
-		r.GET(name, GinGetHandlersChain(SearchHandler(base), mid...)...)
+		r.POST(name, GinGetHandlersChain(handlers.CreateHandler(base), mid...)...)
+		r.GET(nameID, GinGetHandlersChain(handlers.RetrieveHandler(base), mid...)...)
+		r.PUT(name, GinGetHandlersChain(handlers.UpdateHandler(base), mid...)...)
+		r.DELETE(nameID, GinGetHandlersChain(handlers.DeleteHandler(base), mid...)...)
+		r.GET(name, GinGetHandlersChain(handlers.SearchHandler(base), mid...)...)
 
-		for _, belongsTo := range resource.BelongsToFields {
+		for _, belongsTo := range resources[i].BelongsToFields {
 			nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
-			r.GET(nameBelongsTo, GinGetHandlersChain(GetBelongsToHandler(base, belongsTo), mid...)...)
+			r.GET(nameBelongsTo, GinGetHandlersChain(handlers.GetBelongsToHandler(base, belongsTo), mid...)...)
 		}
 	}
 }
@@ -44,7 +46,7 @@ func ConvertHttpHandlerToGinHandler(h http.HandlerFunc) gin.HandlerFunc {
 		for _, param := range c.Params {
 			params[param.Key] = param.Value
 		}
-		r := GetRequestWithParams(c.Request, params)
+		r := handlers.GetRequestWithParams(c.Request, params)
 		h(c.Writer, r)
 	}
 }

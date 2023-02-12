@@ -1,4 +1,4 @@
-package gosimplerest
+package handlers
 
 import (
 	"context"

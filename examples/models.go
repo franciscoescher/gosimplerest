@@ -40,7 +40,7 @@ CREATE TABLE `rent_events` (
   `user_id` varchar(128) DEFAULT NULL,
   `vehicle_id` varchar(128) DEFAULT NULL,
   `starting_time` datetime(3) DEFAULT NULL,
-  `hours` bigint DEFAULT NULL,
+  `hours` int DEFAULT NULL,
   `checkin_time` datetime(3) DEFAULT NULL,
   `dropoff_time` datetime(3) DEFAULT NULL,
   `cancel_time` datetime(3) DEFAULT NULL,
@@ -57,16 +57,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/franciscoescher/gosimplerest"
+	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gofrs/uuid"
 
 	"gopkg.in/guregu/null.v3"
 )
 
-var UserResource = gosimplerest.Resource{
+var UserResource = resource.Resource{
 	Table:      "users",
 	PrimaryKey: "uuid",
-	Fields: map[string]gosimplerest.Field{
+	Fields: map[string]resource.Field{
 		"uuid":        {Validator: validateUUID},
 		"first_name":  {Validator: validateLenght(1)},
 		"last_name":   {Validator: validateLenght(1)},
@@ -81,10 +81,10 @@ var UserResource = gosimplerest.Resource{
 	UpdatedAtField:  null.NewString("updated_at", true),
 }
 
-var RentEventResource = gosimplerest.Resource{
+var RentEventResource = resource.Resource{
 	Table:      "rent_events",
 	PrimaryKey: "uuid",
-	Fields: map[string]gosimplerest.Field{
+	Fields: map[string]resource.Field{
 		"uuid":          {Validator: validateUUID},
 		"user_id":       {Validator: validateUUID},
 		"vehicle_id":    {Validator: validateUUID},
@@ -100,16 +100,16 @@ var RentEventResource = gosimplerest.Resource{
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
 	UpdatedAtField:  null.NewString("updated_at", true),
-	BelongsToFields: []gosimplerest.BelongsTo{
+	BelongsToFields: []resource.BelongsTo{
 		{Table: "users", Field: "user_id"},
 		{Table: "vehicles", Field: "vehicle_id"},
 	},
 }
 
-var VehicleResource = gosimplerest.Resource{
+var VehicleResource = resource.Resource{
 	Table:      "vehicles",
 	PrimaryKey: "uuid",
-	Fields: map[string]gosimplerest.Field{
+	Fields: map[string]resource.Field{
 		"uuid":           {Validator: validateUUID},
 		"license_plate":  {},
 		"state":          {},
@@ -178,7 +178,7 @@ func validateNullableTime(field string, val any) error {
 	return validateTime(field, val)
 }
 
-func validateLenght(i int) gosimplerest.ValidatorFunc {
+func validateLenght(i int) resource.ValidatorFunc {
 	return func(field string, val any) error {
 		s := ""
 		// if in body

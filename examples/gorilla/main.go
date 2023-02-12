@@ -10,6 +10,7 @@ import (
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
+	"github.com/franciscoescher/gosimplerest/resource"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -28,7 +29,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// create routes for rest api
-	resources := []gosimplerest.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
+	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
 	r = gosimplerest.AddGorillaMuxHandlers(r, db, logger, resources, LoggingMiddleware)
 
 	// iterates over routes and logs them

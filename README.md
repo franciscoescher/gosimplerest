@@ -8,7 +8,7 @@ The api will create endpoints for each resource configuration provided to the Ad
 
 Currently supported routers are gin and gorilla mux.
 
-To resource configuration can be see in the `resource.go` file, in the `Resource` struct.
+To resource configuration can be see in the `./resource/resource.go` file, in the `Resource` struct.
 
 It creates the following routes (models are table names of the resources, converted to kebab case):
 - GET /model/{id}
@@ -118,6 +118,6 @@ To add a new router type, create a new file with the type of the router as name 
 
 `func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, resources []Resource, ...mid <middleware handlers type for your router>)`
 
-This function should add the routes to the router, using the handlers form the `handlers.go` file.
+This function should add the routes to the router, using the handlers from the `handlers` folder.
 
 The url parameters should be passed to the handlers in the request context, using the `GetRequestWithParams` function.
