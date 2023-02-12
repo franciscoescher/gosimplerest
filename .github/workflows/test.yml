@@ -51,4 +51,4 @@ jobs:
           go-version: 1.19
 
       - name: Run tests
-        run: DB_USER_TEST=root DB_HOSTNAME_TEST=127.0.0.1 DB_PORT_TEST=3306 DB_SCHEMA_TEST=test_database go test ./...
+        run: DB_USER_TEST=root DB_HOSTNAME_TEST=127.0.0.1 DB_PORT_TEST=3306 DB_SCHEMA_TEST=test_database go test ./... -cover
