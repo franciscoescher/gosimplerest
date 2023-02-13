@@ -1,6 +1,6 @@
 # Example
 
-This folder contains an example of implementation of the package.
+This folder contains examples of implementation of the package.
 
 ## Environment Variables
 
@@ -12,6 +12,6 @@ The database credentials will be read from the following environment variables:
 - DB_PORT: database port
 - DB_SCHEMA: database schema
 
-## Running the example
+## Running the examples
 
-`DB_USER=<user> DB_HOSTNAME=<host> DB_PORT=<port> DB_SCHEMA=<schema> DB_PASSWORD=<pwd> go run ./examples/gorilla`
+`DB_USER=<user> DB_HOSTNAME=<host> DB_PORT=<port> DB_SCHEMA=<schema> DB_PASSWORD=<pwd> go run ./examples/gin`

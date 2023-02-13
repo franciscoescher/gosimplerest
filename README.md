@@ -6,7 +6,7 @@ Currently contains implementation using sql as database, logrus as logger and go
 
 The api will create endpoints for each resource configuration provided to the Add<Router>Handlers functions.
 
-Currently supported routers are gin and gorilla mux.
+Currently supported routers are gorilla mux, gin and chi.
 
 To resource configuration can be see in the `./resource/resource.go` file, in the `Resource` struct.
 
@@ -118,7 +118,7 @@ func getDB() *sql.DB {
 
 To add a new router type, create a new file with the type of the router as name and that contains a function with the following signature:
 
-`func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, v *validator.Validate, resources []Resource, ...mid <middleware handlers type for your router>)`
+`func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, v *validator.Validate, resources []Resource`
 
 This function should add the routes to the router, using the handlers from the `handlers` folder.
 

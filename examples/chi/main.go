@@ -11,9 +11,9 @@ import (
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
 	"github.com/franciscoescher/gosimplerest/resource"
+	"github.com/go-chi/chi"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,28 +26,19 @@ func main() {
 	defer db.Close()
 
 	// create router
-	r := mux.NewRouter()
+	r := chi.NewRouter()
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	r = gosimplerest.AddGorillaMuxHandlers(r, db, logger, nil, resources, examples.LoggingHandlerFunc)
+	r = gosimplerest.AddChiHandlers(r, db, logger, nil, resources)
+	r.Use(examples.LoggingHandler)
 
 	// iterates over routes and logs them
-	err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		tpl, err := route.GetPathTemplate()
-		if err != nil {
-			return err
-		}
-		methods, nil := route.GetMethods()
-		if err != nil {
-			return err
-		}
-		for _, method := range methods {
-			logrus.WithFields(logrus.Fields{
-				"method": method,
-				"path":   tpl,
-			}).Info("route registered")
-		}
+	err := chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		logrus.WithFields(logrus.Fields{
+			"method": method,
+			"path":   route,
+		}).Info("route registered")
 		return nil
 	})
 	if err != nil {

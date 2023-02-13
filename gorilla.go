@@ -14,6 +14,7 @@ import (
 	"github.com/stoewer/go-strcase"
 )
 
+// AddGorillaMuxHandlers contains an extra parameter for the middleware since it can't be added to the router directly
 func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource, mid func(h http.Handler) http.HandlerFunc) *mux.Router {
 	if v == nil {
 		v = validator.New()
@@ -27,24 +28,24 @@ func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *valida
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
-		r.HandleFunc(name, GorillaMiddelwares(mid, handlers.CreateHandler(base))).Methods(http.MethodPost)
-		r.HandleFunc(nameID, GorillaMiddelwares(mid, handlers.RetrieveHandler(base))).Methods(http.MethodGet)
-		r.HandleFunc(name, GorillaMiddelwares(mid, handlers.UpdateHandler(base))).Methods(http.MethodPut)
-		r.HandleFunc(nameID, GorillaMiddelwares(mid, handlers.DeleteHandler(base))).Methods(http.MethodDelete)
-		r.HandleFunc(name, GorillaMiddelwares(mid, handlers.SearchHandler(base))).Methods(http.MethodGet)
+		r.HandleFunc(name, GorillaHandler(mid, handlers.CreateHandler(base))).Methods(http.MethodPost)
+		r.HandleFunc(nameID, GorillaHandler(mid, handlers.RetrieveHandler(base))).Methods(http.MethodGet)
+		r.HandleFunc(name, GorillaHandler(mid, handlers.UpdateHandler(base))).Methods(http.MethodPut)
+		r.HandleFunc(nameID, GorillaHandler(mid, handlers.DeleteHandler(base))).Methods(http.MethodDelete)
+		r.HandleFunc(name, GorillaHandler(mid, handlers.SearchHandler(base))).Methods(http.MethodGet)
 
 		for _, belongsTo := range resources[i].BelongsToFields {
 			nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
-			r.HandleFunc(nameBelongsTo, GorillaMiddelwares(mid, handlers.GetBelongsToHandler(base, belongsTo))).Methods(http.MethodGet)
+			r.HandleFunc(nameBelongsTo, GorillaHandler(mid, handlers.GetBelongsToHandler(base, belongsTo))).Methods(http.MethodGet)
 		}
 	}
 	return r
 }
 
-// GorrileGorillaMiddelwares wraps the handler function with the given middleware
+// GorillaHandler wraps the handler function with the given middleware
 // It adds params to request context.
 // If the middelware function is nil, it returns the handler
-func GorillaMiddelwares(mid func(h http.Handler) http.HandlerFunc, handlerFunc http.Handler) http.HandlerFunc {
+func GorillaHandler(mid func(h http.Handler) http.HandlerFunc, handlerFunc http.Handler) http.HandlerFunc {
 	if mid != nil {
 		handlerFunc = mid(handlerFunc)
 	}

@@ -1,4 +1,6 @@
-package main
+// This package contains a logger middleware for the frameworks used in the examples.
+
+package examples
 
 import (
 	"net/http"
@@ -28,7 +30,7 @@ func (rw *loggingResponseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
-func LoggingMiddleware(h http.Handler) http.HandlerFunc {
+func LoggingHandlerFunc(h http.Handler) http.HandlerFunc {
 	fn := func(rw http.ResponseWriter, req *http.Request) {
 		start := time.Now()
 
@@ -43,7 +45,12 @@ func LoggingMiddleware(h http.Handler) http.HandlerFunc {
 			"status":   lrw.statusCode,
 			"duration": duration,
 			"size":     lrw.size,
-		}).Info("request gorillad")
+		}).Info("request")
 	}
 	return http.HandlerFunc(fn)
+}
+
+func LoggingHandler(h http.Handler) http.Handler {
+	fn := LoggingHandlerFunc(h)
+	return http.Handler(fn)
 }
