@@ -20,7 +20,9 @@ It creates the following routes (models are table names of the resources, conver
 Also, for each belongs to relation, it creates the following routes:
 - GET /belongs-to/{id}/model
   
-The handlers parameter is a function to wrap the handlers with, for example, authentication and logging
+The handlers created are standard http.HandlerFunc, so they can be used with any router.
+
+Params from the url are passed to the handlers in the request context, using the `GetRequestWithParams` function.
 
 ## Simple usage
 
