@@ -27,11 +27,11 @@ func main() {
 
 	// create router
 	r := chi.NewRouter()
+	r.Use(examples.LoggingHandler)
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
 	r = gosimplerest.AddChiHandlers(r, db, logger, nil, resources)
-	r.Use(examples.LoggingHandler)
 
 	// iterates over routes and logs them
 	err := chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {

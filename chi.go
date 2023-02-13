@@ -44,7 +44,7 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 // ChiHandler wraps the handler function with the given middleware
 // It adds params to request context.
 // If the middelware function is nil, it returns the handler
-func ChiHandler(handlerFunc http.Handler) http.HandlerFunc {
+func ChiHandler(h http.HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		// get params from chi context
 		keys := make([]string, 0)
@@ -59,7 +59,6 @@ func ChiHandler(handlerFunc http.Handler) http.HandlerFunc {
 			params[keys[i]] = values[i]
 		}
 
-		r = handlers.GetRequestWithParams(r, params)
-		handlerFunc.ServeHTTP(rw, r)
+		handlers.AddParamsToHandlerFunc(h, params)(rw, r)
 	}
 }
