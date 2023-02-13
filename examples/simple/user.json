@@ -2,7 +2,7 @@
   "table": "users",
   "primary_key": "uuid",
   "fields": {
-    "uuid": {},
+    "uuid": {"validator": "uuid"},
     "first_name": {},
     "phone": {},
     "created_at": {},

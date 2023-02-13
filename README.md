@@ -2,7 +2,7 @@
 
 This package provides an out of the box implementation of a rest api router for go, with simple configuration of the resources (tables in the database).
 
-Currently contains implementation using sql as database and logrus as logger.
+Currently contains implementation using sql as database, logrus as logger and go validator v10 as param validator.
 
 The api will create endpoints for each resource configuration provided to the Add<Router>Handlers functions.
 
@@ -40,6 +40,7 @@ import (
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -87,6 +88,7 @@ func main() {
 		r,
 		db,
 		logger,
+		validator.New(),
 		[]gosimplerest.Resource{UserResource})
 
 	logrus.Fatal(r.Run(":3333"))
