@@ -48,8 +48,7 @@ func EchoHandler(h http.HandlerFunc) echo.HandlerFunc {
 		for _, param := range c.ParamNames() {
 			params[param] = c.Param(param)
 		}
-		r := handlers.GetRequestWithParams(c.Request(), params)
-		h(c.Response().Writer, r)
+		handlers.AddParamsToHandlerFunc(h, params)(c.Response().Writer, c.Request())
 		return nil
 	}
 }

@@ -47,7 +47,6 @@ func GinHandler(h http.HandlerFunc) gin.HandlerFunc {
 		for _, param := range c.Params {
 			params[param.Key] = param.Value
 		}
-		r := handlers.GetRequestWithParams(c.Request, params)
-		h(c.Writer, r)
+		handlers.AddParamsToHandlerFunc(h, params)(c.Writer, c.Request)
 	}
 }

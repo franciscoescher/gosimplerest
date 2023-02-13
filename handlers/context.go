@@ -37,3 +37,11 @@ func ReadParams(r *http.Request, s string) string {
 	}
 	return val
 }
+
+// AddParamsToHandlerFunc returns a new http.HandlerFunc that adds the given params to the request context
+func AddParamsToHandlerFunc(h http.HandlerFunc, params map[string]string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r = GetRequestWithParams(r, params)
+		h(w, r)
+	}
+}
