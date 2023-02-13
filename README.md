@@ -118,7 +118,7 @@ func getDB() *sql.DB {
 
 To add a new router type, create a new file with the type of the router as name and that contains a function with the following signature:
 
-`func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, resources []Resource, ...mid <middleware handlers type for your router>)`
+`func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, v *validator.Validate, resources []Resource, ...mid <middleware handlers type for your router>)`
 
 This function should add the routes to the router, using the handlers from the `handlers` folder.
 
