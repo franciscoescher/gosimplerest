@@ -6,7 +6,7 @@ Currently contains implementation using sql as database, logrus as logger and go
 
 The api will create endpoints for each resource configuration provided to the Add<Router>Handlers functions.
 
-Currently supported routers are gorilla mux, gin and chi.
+Currently supported routers are gorilla mux, gin, chi, echo and fiber.
 
 To resource configuration can be see in the `./resource/resource.go` file, in the `Resource` struct.
 
