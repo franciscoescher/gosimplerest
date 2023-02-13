@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
 	null "gopkg.in/guregu/null.v3"
@@ -18,6 +19,7 @@ type Base struct {
 	Logger   *logrus.Logger
 	DB       *sql.DB
 	Resource *Resource
+	Validate *validator.Validate
 }
 
 // gosimplerest.Resource represents a database table
@@ -42,7 +44,7 @@ type Resource struct {
 	BelongsToFields []BelongsTo `json:"belongs_to_fields"`
 	// GeneratePrimaryKeyFunc is a function that generates a new primary key
 	// if null, the defaultGeneratePrimaryKeyFunc is used
-	GeneratePrimaryKeyFunc func() any `json:"-"`
+	GeneratePrimaryKeyFunc GeneratePrimaryKeyFunc `json:"-"`
 	// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
 	OmitCreateRoute     bool `json:"omit_create_route"`
 	OmitRetrieveRoute   bool `json:"omit_retrieve_route"`
@@ -50,11 +52,16 @@ type Resource struct {
 	OmitDeleteRoute     bool `json:"omit_delete_route"`
 	OmitSearchRoute     bool `json:"omit_search_route"`
 	OmitBelongsToRoutes bool `json:"omit_belongs_to_routes"`
+	// AutoIncrementalPK is a flag that indicates if the primary key is autoincremental
+	// and will not use it when inserting a new row
+	AutoIncrementalPK bool `json:"incremental_pk"`
 }
 
+type GeneratePrimaryKeyFunc func() any
+
 type Field struct {
-	Validator    ValidatorFunc `json:"-"`
-	Unsearchable bool          `json:"unsearchable"`
+	Validator    string `json:"validator"`
+	Unsearchable bool   `json:"unsearchable"`
 }
 
 type BelongsTo struct {
@@ -65,7 +72,20 @@ type BelongsTo struct {
 // ValidatorFunc is a function that validates a field
 // This function should expect the value to be either string (for the query routes) or
 // the format that the database driver expects (for the insert/update routes)
-type ValidatorFunc func(field string, val any) error
+type ValidatorFunc func(fl validator.FieldLevel) bool
+
+// FromJSON reads a JSON file and populates the model
+func (b *Resource) FromJSON(filename string) error {
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal([]byte(file), &b)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // HasField returns true if the model has the given field
 func (b *Resource) HasField(field string) bool {
@@ -82,11 +102,22 @@ func (b *Resource) IsSearchable(field string) bool {
 	return !val.Unsearchable
 }
 
-func (b *Resource) ValidateField(field string, value any) error {
+func (b *Resource) ValidateFields(v *validator.Validate, data map[string]interface{}) map[string]interface{} {
+	rules := make(map[string]interface{}, len(data))
+	for k := range data {
+		rules[k] = b.Fields[k].Validator
+	}
+	return v.ValidateMap(data, rules)
+}
+
+func (b *Resource) ValidateField(v *validator.Validate, field string, value any) error {
 	vf := b.Fields[field].Validator
-	if vf != nil {
-		err := vf(field, value)
-		return err
+	if vf == "" {
+		return nil
+	}
+	err := v.Var(value, vf)
+	if err != nil {
+		return fmt.Errorf("field %s is invalid for validation rule: %s", field, vf)
 	}
 	return nil
 }
@@ -191,12 +222,4 @@ func (b *Resource) parseRows(rows *sql.Rows) ([]map[string]any, error) {
 		results = append(results, result)
 	}
 	return results, nil
-}
-
-func (b *Resource) FromJSON(filename string) error {
-	file, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal([]byte(file), &b)
 }

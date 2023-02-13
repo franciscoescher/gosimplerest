@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/franciscoescher/gosimplerest/resource"
+	"github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
@@ -50,7 +51,7 @@ var testBelongsResource = resource.Resource{
 
 func TestCreateHandler(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB}
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
 
 	var data = map[string]interface{}{
 		"first_name": "Fulano",

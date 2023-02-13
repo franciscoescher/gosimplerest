@@ -53,12 +53,7 @@ CREATE TABLE `rent_events` (
 */
 
 import (
-	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/franciscoescher/gosimplerest/resource"
-	"github.com/gofrs/uuid"
 
 	"gopkg.in/guregu/null.v3"
 )
@@ -67,14 +62,14 @@ var UserResource = resource.Resource{
 	Table:      "users",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
-		"uuid":        {Validator: validateUUID},
-		"first_name":  {Validator: validateLenght(1)},
-		"last_name":   {Validator: validateLenght(1)},
+		"uuid":        {Validator: "uuid4"},
+		"first_name":  {},
+		"last_name":   {},
 		"phone":       {},
 		"credit_card": {Unsearchable: true},
-		"created_at":  {Validator: validateNullableTime},
-		"deleted_at":  {Validator: validateNullableTime},
-		"updated_at":  {Validator: validateNullableTime},
+		"created_at":  {},
+		"deleted_at":  {},
+		"updated_at":  {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
@@ -85,17 +80,17 @@ var RentEventResource = resource.Resource{
 	Table:      "rent_events",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
-		"uuid":          {Validator: validateUUID},
-		"user_id":       {Validator: validateUUID},
-		"vehicle_id":    {Validator: validateUUID},
-		"starting_time": {Validator: validateTime},
-		"hours":         {Validator: validateIntPositive},
-		"checkin_time":  {Validator: validateNullableTime},
-		"dropoff_time":  {Validator: validateNullableTime},
-		"cancel_time":   {Validator: validateNullableTime},
-		"created_at":    {Validator: validateNullableTime},
-		"deleted_at":    {Validator: validateNullableTime},
-		"updated_at":    {Validator: validateNullableTime},
+		"uuid":          {Validator: "uuid4"},
+		"user_id":       {Validator: "uuid4"},
+		"vehicle_id":    {Validator: "uuid4"},
+		"starting_time": {},
+		"hours":         {},
+		"checkin_time":  {},
+		"dropoff_time":  {},
+		"cancel_time":   {},
+		"created_at":    {},
+		"deleted_at":    {},
+		"updated_at":    {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
@@ -110,93 +105,18 @@ var VehicleResource = resource.Resource{
 	Table:      "vehicles",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
-		"uuid":           {Validator: validateUUID},
+		"uuid":           {Validator: "uuid4"},
 		"license_plate":  {},
 		"state":          {},
 		"archived":       {},
-		"year":           {Validator: validateIntPositive},
+		"year":           {},
 		"price_per_hour": {},
-		"lot":            {Validator: validateIntPositive},
-		"created_at":     {Validator: validateNullableTime},
-		"deleted_at":     {Validator: validateNullableTime},
-		"updated_at":     {Validator: validateNullableTime},
+		"lot":            {},
+		"created_at":     {},
+		"deleted_at":     {},
+		"updated_at":     {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
 	UpdatedAtField:  null.NewString("updated_at", true),
-}
-
-func validateUUID(field string, val any) error {
-	if val == nil {
-		return fmt.Errorf("%s is required", field)
-	}
-	_, err := uuid.FromString(val.(string))
-	if err != nil {
-		return fmt.Errorf(field+" is invalid: %s", val)
-	}
-	return nil
-}
-
-func validateIntPositive(field string, val any) error {
-	s, ok := val.(string)
-	if !ok {
-		return fmt.Errorf("%s is invalid: %s", field, val)
-	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return fmt.Errorf("%s is invalid: %s", field, val)
-	}
-	if i <= 0 {
-		return fmt.Errorf("%s must be positive: %s", field, val)
-	}
-	return nil
-}
-
-func validateTime(field string, val any) error {
-	if val == nil {
-		return fmt.Errorf("%s can't be null", field)
-	}
-	// if in query
-	if v, ok := val.(string); ok {
-		_, err := time.Parse(time.RFC3339, v)
-		if err != nil {
-			return fmt.Errorf("%s is invalid: %s", field, v)
-		}
-	}
-	// if in body
-	_, ok := val.(time.Time)
-	if !ok {
-		return fmt.Errorf("%s is invalid: %s", field, val)
-	}
-	return nil
-}
-
-func validateNullableTime(field string, val any) error {
-	if val == nil {
-		return nil
-	}
-	return validateTime(field, val)
-}
-
-func validateLenght(i int) resource.ValidatorFunc {
-	return func(field string, val any) error {
-		s := ""
-		// if in body
-		n, ok := val.(int64)
-		if ok {
-			s = strconv.FormatInt(n, 10)
-		} else {
-			// if in query
-			s, ok = val.(string)
-			if !ok {
-				return fmt.Errorf("%s is invalid: %s", field, val)
-			}
-		}
-
-		if len(s) < i {
-			return fmt.Errorf("%s must have %d characters: %s", field, i, val)
-		}
-
-		return nil
-	}
 }

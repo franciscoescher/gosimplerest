@@ -48,6 +48,7 @@ func main() {
 		r,
 		db,
 		logger,
+		nil,
 		[]resource.Resource{user})
 
 	logrus.Fatal(r.Run(":3333"))

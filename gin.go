@@ -8,14 +8,17 @@ import (
 	"github.com/franciscoescher/gosimplerest/handlers"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
 )
 
-func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, resources []resource.Resource, mid ...gin.HandlerFunc) {
-
+func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource, mid ...gin.HandlerFunc) {
+	if v == nil {
+		v = validator.New()
+	}
 	for i := range resources {
-		base := &resource.Base{Logger: l, DB: d, Resource: &resources[i]}
+		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
 		nameID := fmt.Sprintf("%s/:id", name)
 		r.POST(name, GinGetHandlersChain(handlers.CreateHandler(base), mid...)...)

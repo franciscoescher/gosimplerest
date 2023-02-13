@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/franciscoescher/gosimplerest/resource"
-	"github.com/sirupsen/logrus"
 )
 
 // UpdateHandler returns a handler for the PUT method
@@ -43,13 +42,13 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 				encodeJsonError(w, fmt.Sprintf("%s not in the model", key))
 				return
 			}
-			// validates value
-			err := base.Resource.ValidateField(key, data[key])
-			if err != nil {
-				logrus.Error(err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
+		}
+		// validates values
+		errs := base.Resource.ValidateFields(base.Validate, data)
+		if len(errs) > 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			encodeJsonError(w, fmt.Sprintf("%s", errs))
+			return
 		}
 
 		affected, err := base.Resource.Update(base, data)

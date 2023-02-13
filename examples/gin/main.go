@@ -29,7 +29,7 @@ func main() {
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	gosimplerest.AddGinHandlers(r, db, logger, resources)
+	gosimplerest.AddGinHandlers(r, db, logger, nil, resources)
 
 	log.Fatal(r.Run(":3333"))
 }

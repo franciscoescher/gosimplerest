@@ -28,7 +28,7 @@ func SearchHandler(base *resource.Base) http.HandlerFunc {
 			}
 			// validates values
 			for _, v := range query[key] {
-				err := base.Resource.ValidateField(key, v)
+				err := base.Resource.ValidateField(base.Validate, key, v)
 				if err != nil {
 					logrus.Error(err)
 					w.WriteHeader(http.StatusBadRequest)

@@ -30,7 +30,7 @@ func main() {
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	r = gosimplerest.AddGorillaMuxHandlers(r, db, logger, resources, LoggingMiddleware)
+	r = gosimplerest.AddGorillaMuxHandlers(r, db, logger, nil, resources, LoggingMiddleware)
 
 	// iterates over routes and logs them
 	err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {

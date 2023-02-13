@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/franciscoescher/gosimplerest/resource"
-	"github.com/sirupsen/logrus"
 )
 
 // CreateHandler returns a handler for the POST method
@@ -25,8 +24,10 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 			return
 		}
 
-		pk := base.Resource.GeneratePrimaryKey()
-		data[base.Resource.PrimaryKey] = pk
+		if !base.Resource.AutoIncrementalPK {
+			pk := base.Resource.GeneratePrimaryKey()
+			data[base.Resource.PrimaryKey] = pk
+		}
 		if base.Resource.CreatedAtField.Valid {
 			data[base.Resource.CreatedAtField.String] = time.Now()
 		}
@@ -45,23 +46,26 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 				encodeJsonError(w, fmt.Sprintf("%s not in the model", key))
 				return
 			}
-			// validates value
-			err := base.Resource.ValidateField(key, data[key])
-			if err != nil {
-				logrus.Error(err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
+		}
+		// validates values
+		errs := base.Resource.ValidateFields(base.Validate, data)
+		if len(errs) > 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			encodeJsonError(w, fmt.Sprintf("%s", errs))
+			return
 		}
 
-		err = base.Resource.Insert(base, data)
+		id, err := base.Resource.Insert(base, data)
 		if err != nil {
 			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		if base.Resource.AutoIncrementalPK {
+			data[base.Resource.PrimaryKey] = id
+		}
 
-		result := map[string]any{base.Resource.PrimaryKey: pk}
+		result := map[string]any{base.Resource.PrimaryKey: data[base.Resource.PrimaryKey]}
 		json.NewEncoder(w).Encode(result)
 	}
 }

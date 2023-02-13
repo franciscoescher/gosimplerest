@@ -17,7 +17,7 @@ func GetBelongsToHandler(base *resource.Base, belongsTo resource.BelongsTo) http
 		id := ReadParams(r, "id")
 
 		// validates id
-		err := base.Resource.ValidateField(base.Resource.PrimaryKey, id)
+		err := base.Resource.ValidateField(base.Validate, base.Resource.PrimaryKey, id)
 		if err != nil {
 			base.Logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)

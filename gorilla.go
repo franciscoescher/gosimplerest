@@ -7,14 +7,18 @@ import (
 
 	"github.com/franciscoescher/gosimplerest/handlers"
 	"github.com/franciscoescher/gosimplerest/resource"
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
 )
 
-func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, resources []resource.Resource, mid func(h http.Handler) http.HandlerFunc) *mux.Router {
+func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource, mid func(h http.Handler) http.HandlerFunc) *mux.Router {
+	if v == nil {
+		v = validator.New()
+	}
 	for i := range resources {
-		base := &resource.Base{Logger: l, DB: d, Resource: &resources[i]}
+		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
