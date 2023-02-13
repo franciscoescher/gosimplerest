@@ -45,7 +45,7 @@ func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *valida
 // GorillaHandler wraps the handler function with the given middleware
 // It adds params to request context.
 // If the middelware function is nil, it returns the handler
-func GorillaHandler(mid func(h http.Handler) http.HandlerFunc, h http.Handler) http.HandlerFunc {
+func GorillaHandler(mid func(h http.Handler) http.HandlerFunc, h http.HandlerFunc) http.HandlerFunc {
 	if mid != nil {
 		h = mid(h)
 	}
