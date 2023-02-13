@@ -3,6 +3,7 @@ package gosimplerest
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
@@ -16,6 +17,10 @@ import (
 func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource, mid ...gin.HandlerFunc) {
 	if v == nil {
 		v = validator.New()
+	}
+	if l == nil {
+		l = logrus.New()
+		l.Out = io.Discard
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}

@@ -3,6 +3,7 @@ package gosimplerest
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
@@ -16,6 +17,10 @@ import (
 func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource, mid func(h http.Handler) http.HandlerFunc) *mux.Router {
 	if v == nil {
 		v = validator.New()
+	}
+	if l == nil {
+		l = logrus.New()
+		l.Out = io.Discard
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
