@@ -39,7 +39,7 @@ func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Val
 	}
 }
 
-// ConvertHttpHandlerToGinHandlerr converts a http.HandlerFunc to a gin.HandlerFunc
+// GinHandler converts a http.HandlerFunc to a gin.HandlerFunc
 // It adds params to request context.
 func GinHandler(h http.HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
