@@ -37,7 +37,7 @@ func main() {
 
 	// load resource from json file
 	user := resource.Resource{}
-	err := user.FromJSON("./examples/simple/user.json")
+	err := user.FromJSON("./examples/fromjson/user.json")
 	if err != nil {
 		logrus.Fatal(err)
 	}
