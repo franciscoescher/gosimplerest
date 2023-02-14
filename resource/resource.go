@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"sort"
 	"strconv"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
+	"github.com/stoewer/go-strcase"
 	null "gopkg.in/guregu/null.v3"
 )
 
@@ -26,10 +28,16 @@ type Base struct {
 type Resource struct {
 	// Table is the name of the table
 	Table string `json:"table"`
-	// PrimaryKey is the name of field that is the primary key
-	PrimaryKey string `json:"primary_key"`
 	// Fields is a list of fields in the table
 	Fields map[string]Field `json:"fields"`
+	// PrimaryKey is the name of field that is the primary key
+	PrimaryKey string `json:"primary_key"`
+	// AutoIncrementalPK is a flag that indicates if the primary key is autoincremental
+	// and will not use it when inserting a new row
+	AutoIncrementalPK bool `json:"incremental_pk"`
+	// GeneratePrimaryKeyFunc is a function that generates a new primary key
+	// if null, the defaultGeneratePrimaryKeyFunc is used
+	GeneratePrimaryKeyFunc GeneratePrimaryKeyFunc `json:"-"`
 	// SoftDeleteField is the name of the field that is used for soft deletes
 	// if null, no soft deletes are used
 	SoftDeleteField null.String `json:"soft_delete_field"`
@@ -42,9 +50,6 @@ type Resource struct {
 	// BelongsToFields is a list of fields represent a belonging relation with another table,
 	// usually also foreign keys to other tables
 	BelongsToFields []BelongsTo `json:"belongs_to_fields"`
-	// GeneratePrimaryKeyFunc is a function that generates a new primary key
-	// if null, the defaultGeneratePrimaryKeyFunc is used
-	GeneratePrimaryKeyFunc GeneratePrimaryKeyFunc `json:"-"`
 	// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
 	OmitCreateRoute     bool `json:"omit_create_route"`
 	OmitRetrieveRoute   bool `json:"omit_retrieve_route"`
@@ -52,9 +57,6 @@ type Resource struct {
 	OmitDeleteRoute     bool `json:"omit_delete_route"`
 	OmitSearchRoute     bool `json:"omit_search_route"`
 	OmitBelongsToRoutes bool `json:"omit_belongs_to_routes"`
-	// AutoIncrementalPK is a flag that indicates if the primary key is autoincremental
-	// and will not use it when inserting a new row
-	AutoIncrementalPK bool `json:"incremental_pk"`
 }
 
 type GeneratePrimaryKeyFunc func() any
@@ -84,6 +86,89 @@ func (b *Resource) FromJSON(filename string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+/*
+FromStruct reads a struct and populates the resource
+
+The struct should have the following tags:
+  - db: used to get the field name
+  - json: used to get the field name (if db is not present)
+  - pk: used to get the primary key field name:
+    set to autoincremental if the primary key is autoincremental
+    set to true if the primary key is not autoincremental
+  - soft_delete: used to get the soft delete field
+  - created_at: used to get the created at field
+  - updated_at: used to get the updated at field
+  - belongs_to: used to get the belongs to fields
+  - validate: used to get the validation rules
+  - unsearchable: used to get the unsearchable fields
+  - pk: used to get the primary key
+
+The omit flags and GeneratePrimaryKeyFunc are not populated by this function
+*/
+func (b *Resource) FromStruct(s any) error {
+	// Table name
+	t := reflect.TypeOf(s)
+	if t.Kind() != reflect.Struct {
+		return fmt.Errorf("not struct type: %s", t.Kind())
+	}
+	b.Table = strcase.SnakeCase(t.Name())
+
+	// Fields
+	// iterate over fields
+	fields := make(map[string]Field, t.NumField())
+	belongs := make([]BelongsTo, 0)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		// get the field name
+		name := field.Tag.Get("json")
+		db := field.Tag.Get("db")
+		if db != "-" && db != "" {
+			name = db
+		} else if db == "" {
+			json := field.Tag.Get("json")
+			if json != "-" && json != "" {
+				name = json
+			} else if json == "" {
+				name = strcase.SnakeCase(field.Name)
+			}
+		}
+		// get the field struct
+		fields[name] = Field{
+			Validator:    field.Tag.Get("validate"),
+			Unsearchable: field.Tag.Get("unsearchable") == "true"}
+		// get the primary key
+		if field.Tag.Get("pk") == "true" {
+			b.PrimaryKey = name
+		} else if field.Tag.Get("pk") == "autoincremental" {
+			b.PrimaryKey = name
+			b.AutoIncrementalPK = true
+		}
+		// get the soft delete field
+		if field.Tag.Get("soft_delete") == "true" {
+			b.SoftDeleteField = null.StringFrom(name)
+		}
+		// get the created at field
+		if field.Tag.Get("created_at") == "true" {
+			b.CreatedAtField = null.StringFrom(name)
+		}
+		// get the updated at field
+		if field.Tag.Get("updated_at") == "true" {
+			b.UpdatedAtField = null.StringFrom(name)
+		}
+		// get the belongs to fields
+		if field.Tag.Get("belongs_to") != "" {
+			belongs = append(b.BelongsToFields, BelongsTo{
+				Field: name,
+				Table: field.Tag.Get("belongs_to"),
+			})
+		}
+	}
+	b.Fields = fields
+	b.BelongsToFields = belongs
+
 	return nil
 }
 
