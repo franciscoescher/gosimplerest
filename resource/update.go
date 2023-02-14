@@ -18,7 +18,7 @@ func (b *Resource) Update(base *Base, data map[string]any) (int64, error) {
 	}
 	values = append(values, data[b.PrimaryKey()])
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE %s=?`, b.GetName(), strings.Join(fields, "=?,")+"=?", b.PrimaryKey())
+	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE %s=?`, b.GetTable(), strings.Join(fields, "=?,")+"=?", b.PrimaryKey())
 	result, err := base.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err

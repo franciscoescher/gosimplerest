@@ -23,9 +23,9 @@ func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Val
 		l.Out = io.Discard
 	}
 	for i := range resources {
-		logrus.Info(resources[i].GetName())
+		logrus.Info(resources[i].GetTable())
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetName()))
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetTable()))
 		nameID := fmt.Sprintf("%s/:id", name)
 		r.POST(name, GinHandler(handlers.CreateHandler(base)))
 		r.GET(nameID, GinHandler(handlers.RetrieveHandler(base)))

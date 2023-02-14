@@ -25,7 +25,7 @@ func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *valida
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetName()))
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetTable()))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
 		r.HandleFunc(name, GorillaHandler(mid, handlers.CreateHandler(base))).Methods(http.MethodPost)

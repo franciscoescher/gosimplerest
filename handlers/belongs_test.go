@@ -63,7 +63,7 @@ func TestBelongsToHandler(t *testing.T) {
 
 	// Make the request
 	route := fmt.Sprintf("/%s/%s/%s", strcase.KebabCase(testBelongsResource.BelongsToFields()[0].Table),
-		data["uuid"], strcase.KebabCase(testBelongsResource.GetName()))
+		data["uuid"], strcase.KebabCase(testBelongsResource.GetTable()))
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -86,7 +86,7 @@ func TestBelongsToHandler(t *testing.T) {
 
 func insertDBEventTestRow(data map[string]interface{}) error {
 	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, user_id, starting_time, hours, created_at, deleted_at) VALUES (?,?,?,?,?,?)",
-		testBelongsResource.GetName()),
+		testBelongsResource.GetTable()),
 		data["uuid"], data["user_id"], data["starting_time"], data["hours"], data["created_at"], data["deleted_at"],
 	)
 	return err

@@ -10,7 +10,8 @@ import (
 func (b *Resource) Find(base *Base, id any) (map[string]any, error) {
 	fields := b.GetFieldNames()
 
-	response := base.DB.QueryRow(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ? LIMIT 1`, strings.Join(fields, ","), b.GetName(), b.PrimaryKey()), id)
+	response := base.DB.QueryRow(fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ? LIMIT 1`,
+		strings.Join(fields, ","), b.GetTable(), b.PrimaryKey()), id)
 
 	values := make([]any, len(b.GetFieldNames()))
 	scanArgs := make([]any, len(b.GetFieldNames()))

@@ -30,7 +30,7 @@ func TestUpdateHandler(t *testing.T) {
 		"created_at": t1.Add(-time.Hour * 24),
 	}
 
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.GetName()),
+	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.GetTable()),
 		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
 	)
 	if err != nil {
@@ -49,7 +49,7 @@ func TestUpdateHandler(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.GetName()))
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.GetTable()))
 	request, err := http.NewRequest(http.MethodPut, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -62,7 +62,7 @@ func TestUpdateHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 
 	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.GetName()), data["uuid"])
+		testResource.GetTable()), data["uuid"])
 	dataDB := make([]string, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
 	if err != nil {

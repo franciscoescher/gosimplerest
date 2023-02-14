@@ -24,7 +24,7 @@ func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Val
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetName()))
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetTable()))
 		nameID := fmt.Sprintf("%s/:id", name)
 		r.POST(name, EchoHandler(handlers.CreateHandler(base)))
 		r.GET(nameID, EchoHandler(handlers.RetrieveHandler(base)))

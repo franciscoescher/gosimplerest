@@ -58,7 +58,7 @@ func TestSearchHandler(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.GetName()))
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.GetTable()))
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -81,7 +81,7 @@ func TestSearchHandler(t *testing.T) {
 }
 
 func insertDBUserTestRow(data map[string]interface{}) error {
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.GetName()),
+	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.GetTable()),
 		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
 	)
 	return err

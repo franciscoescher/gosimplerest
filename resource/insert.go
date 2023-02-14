@@ -28,7 +28,7 @@ func (b *Resource) Insert(base *Base, data map[string]any) (int64, error) {
 	logrus.Info("AQUIIII")
 	logrus.Info(values)
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, b.GetName(), strings.Join(fields, ","), in)
+	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, b.GetTable(), strings.Join(fields, ","), in)
 	result, err := base.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err

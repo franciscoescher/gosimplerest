@@ -24,8 +24,8 @@ type Base struct {
 
 // gosimplerest.Resource represents a database table
 type Resource struct {
-	// OverrideName is the name of the resource, if null, the name is generated from the struct name
-	OverrideName string `json:"override_name"`
+	// OverrideTableName is the name of the resource, if null, the name is generated from the struct name
+	OverrideTableName string `json:"override_table"`
 	// GeneratePrimaryKeyFunc is a function that generates a new primary key
 	// if null, the defaultGeneratePrimaryKeyFunc is used
 	GeneratePrimaryKeyFunc GeneratePrimaryKeyFunc `json:"-"`
@@ -62,9 +62,12 @@ func (b *Resource) BelongsToFields() []BelongsTo {
 		field := t.Field(i)
 		// get the tag value
 		tag := field.Tag.Get("belongs_to")
-		// if the tag is not empty, use it as the field name
 		if tag != "" {
-			out = append(out, BelongsTo{Field: field.Name, Table: tag})
+			n := field.Tag.Get("json")
+			if n != "" {
+				tag = field.Name
+			}
+			out = append(out, BelongsTo{Field: n, Table: tag})
 		}
 	}
 	return out
@@ -94,20 +97,24 @@ func (b *Resource) findTaggedFieldName(tag string) null.String {
 		tag := field.Tag.Get(tag)
 		// if the tag is not empty, use it as the field name
 		if tag == "true" {
+			n := field.Tag.Get("json")
+			if n != "" {
+				return null.NewString(n, true)
+			}
 			return null.NewString(field.Name, true)
 		}
 	}
 	return null.NewString("", false)
 }
 
-// GetName returns the name of the resource using the reflection package
-func (b *Resource) GetName() string {
+// GetTable returns the name of the resource using the reflection package
+func (b *Resource) GetTable() string {
+	if b.OverrideTableName != "" {
+		return b.OverrideTableName
+	}
 	t := reflect.TypeOf(b.Data)
 	if t != nil {
-		if b.OverrideName != "" {
-			return b.OverrideName
-		}
-		return strcase.KebabCase(t.Name())
+		return strcase.SnakeCase(t.Name())
 	}
 	return ""
 }
@@ -140,7 +147,8 @@ func (b *Resource) GetFieldNames() []string {
 	// iterate over fields
 	fields := make([]string, t.NumField())
 	for i := 0; i < t.NumField(); i++ {
-		fields = append(fields, t.Field(i).Name)
+		tag := t.Field(i).Tag.Get("json")
+		fields[i] = tag
 	}
 	sort.Strings(fields)
 	return fields
@@ -164,8 +172,14 @@ func (b *Resource) HasField(field string) bool {
 	if t == nil {
 		return false
 	}
-	_, ok := t.FieldByName(field)
-	return ok
+	// find field using tag
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if f.Tag.Get("json") == field {
+			return true
+		}
+	}
+	return false
 }
 
 // HasField returns true if the model has the given field
@@ -174,7 +188,7 @@ func (b *Resource) IsSearchable(field string) bool {
 	if t == nil {
 		return false
 	}
-	f, ok := t.FieldByName(field)
+	f, ok := b.FieldByJSONTag(field)
 	return ok && f.Tag.Get("unsearchable") != "true"
 }
 
@@ -185,7 +199,7 @@ func (b *Resource) ValidateFields(v *validator.Validate, data map[string]interfa
 	}
 	rules := make(map[string]interface{}, len(data))
 	for k := range data {
-		f, ok := t.FieldByName(k)
+		f, ok := b.FieldByJSONTag(k)
 		if !ok {
 			return nil, fmt.Errorf("field %s not found", k)
 		}
@@ -194,12 +208,27 @@ func (b *Resource) ValidateFields(v *validator.Validate, data map[string]interfa
 	return v.ValidateMap(data, rules), nil
 }
 
+func (b *Resource) FieldByJSONTag(field string) (reflect.StructField, bool) {
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return reflect.StructField{}, false
+	}
+	// find field using tag
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if f.Tag.Get("json") == field {
+			return f, true
+		}
+	}
+	return reflect.StructField{}, false
+}
+
 func (b *Resource) ValidateField(v *validator.Validate, field string, value any) error {
 	t := reflect.TypeOf(b.Data)
 	if t == nil {
 		return fmt.Errorf("model has no fields")
 	}
-	f, ok := t.FieldByName(field)
+	f, ok := b.FieldByJSONTag(field)
 	if !ok {
 		return fmt.Errorf("field %s not found", field)
 	}

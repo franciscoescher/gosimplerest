@@ -30,7 +30,7 @@ func main() {
 	r.Use(adaptor.HTTPMiddleware(examples.LoggingHandler))
 
 	// create routes for rest api
-	resources := []resource.Resource{examples.UsersResource, examples.RentEventResource, examples.VehicleResource}
+	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
 	gosimplerest.AddFiberHandlers(r, db, logger, nil, resources)
 
 	log.Fatal(r.Listen(":3333"))

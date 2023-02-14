@@ -29,7 +29,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// create routes for rest api
-	resources := []resource.Resource{examples.UsersResource, examples.RentEventResource, examples.VehicleResource}
+	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
 	r = gosimplerest.AddGorillaMuxHandlers(r, db, logger, nil, resources, examples.LoggingHandlerFunc)
 
 	// iterates over routes and logs them

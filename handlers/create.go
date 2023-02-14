@@ -55,6 +55,7 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 			return
 		}
 		if len(validation) > 0 {
+			base.Logger.Error(validation)
 			w.WriteHeader(http.StatusBadRequest)
 			encodeJsonError(w, fmt.Sprintf("%s", validation))
 			return
