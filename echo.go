@@ -24,7 +24,7 @@ func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Val
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetName()))
 		nameID := fmt.Sprintf("%s/:id", name)
 		r.POST(name, EchoHandler(handlers.CreateHandler(base)))
 		r.GET(nameID, EchoHandler(handlers.RetrieveHandler(base)))
@@ -32,7 +32,7 @@ func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Val
 		r.DELETE(nameID, EchoHandler(handlers.DeleteHandler(base)))
 		r.GET(name, EchoHandler(handlers.SearchHandler(base)))
 
-		for _, belongsTo := range resources[i].BelongsToFields {
+		for _, belongsTo := range resources[i].BelongsToFields() {
 			nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
 			r.GET(nameBelongsTo, EchoHandler(handlers.GetBelongsToHandler(base, belongsTo)))
 		}

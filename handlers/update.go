@@ -23,15 +23,15 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 		}
 
 		// primary key is required
-		_, ok := data[base.Resource.PrimaryKey]
+		_, ok := data[base.Resource.PrimaryKey()]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			encodeJsonError(w, "primery key is required")
 			return
 		}
 
-		if base.Resource.UpdatedAtField.Valid {
-			data[base.Resource.UpdatedAtField.String] = time.Now()
+		if base.Resource.UpdatedAtField().Valid {
+			data[base.Resource.UpdatedAtField().String] = time.Now()
 		}
 
 		// perform data validation
@@ -44,10 +44,15 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 			}
 		}
 		// validates values
-		errs := base.Resource.ValidateFields(base.Validate, data)
-		if len(errs) > 0 {
+		validation, err := base.Resource.ValidateFields(base.Validate, data)
+		if err != nil {
+			base.Logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if len(validation) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			encodeJsonError(w, fmt.Sprintf("%s", errs))
+			encodeJsonError(w, fmt.Sprintf("%s", validation))
 			return
 		}
 

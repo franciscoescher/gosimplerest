@@ -9,7 +9,7 @@ import (
 // FindFromBelongsTo finds all rows of a model with the belongsTo relationship
 func (b *Resource) FindFromBelongsTo(base *Base, id any, belongsTo BelongsTo) ([]map[string]any, error) {
 	fields := b.GetFieldNames()
-	sqlStatement := fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ?`, strings.Join(fields, ","), b.Table, belongsTo.Field)
+	sqlStatement := fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ?`, strings.Join(fields, ","), b.GetName(), belongsTo.Field)
 	response, err := base.DB.Query(sqlStatement, id)
 	if err != nil {
 		if err == sql.ErrNoRows {

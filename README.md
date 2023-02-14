@@ -63,7 +63,7 @@ CREATE TABLE `users` (
 );
 */
 
-var UserResource = gosimplerest.Resource{
+var UsersResource = gosimplerest.Resource{
 	Table:      "users",
 	PrimaryKey: "uuid",
 	Fields: map[string]gosimplerest.Field{
@@ -91,7 +91,7 @@ func main() {
 		db,
 		logger,
 		validator.New(),
-		[]gosimplerest.Resource{UserResource})
+		[]gosimplerest.Resource{UsersResource})
 
 	logrus.Fatal(r.Run(":3333"))
 }

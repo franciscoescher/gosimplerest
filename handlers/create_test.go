@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
@@ -21,32 +22,30 @@ import (
 
 var testDB *sql.DB
 
+type UsersTest struct {
+	UUID      string      `json:"uuid" primary_key:"true"`
+	FirstName string      `json:"first_name"`
+	Phone     string      `json:"phone"`
+	CreatedAt null.String `json:"created_at" created_at:"true"`
+	UpdatedAt null.String `json:"updated_at" updated_at:"true"`
+}
+
 var testResource = resource.Resource{
-	Table:      "users_test",
-	PrimaryKey: "uuid",
-	Fields: map[string]resource.Field{
-		"uuid":       {},
-		"first_name": {},
-		"phone":      {},
-		"created_at": {},
-		"deleted_at": {},
-	},
-	SoftDeleteField: null.NewString("deleted_at", true),
+	Data: UsersTest{},
+}
+
+type RentEventsTest struct {
+	UUID         string      `json:"uuid" primary_key:"true"`
+	UserID       string      `json:"user_id" belongs_to:"users_test"`
+	StartingTime time.Time   `json:"starting_time"`
+	Hours        int         `json:"hours"`
+	CreatedAt    string      `json:"created_at" created_at:"true"`
+	DeletedAt    null.String `json:"deleted_at" soft_delete:"true"`
+	UpdatedAt    null.String `json:"updated_at" updated_at:"true"`
 }
 
 var testBelongsResource = resource.Resource{
-	Table:      "rent_events_test",
-	PrimaryKey: "uuid",
-	Fields: map[string]resource.Field{
-		"uuid":          {},
-		"user_id":       {},
-		"starting_time": {},
-		"hours":         {},
-		"created_at":    {},
-		"deleted_at":    {},
-	},
-	SoftDeleteField: null.NewString("deleted_at", true),
-	BelongsToFields: []resource.BelongsTo{{Table: "users_test", Field: "user_id"}},
+	Data: RentEventsTest{},
 }
 
 func TestCreateHandler(t *testing.T) {
@@ -63,7 +62,7 @@ func TestCreateHandler(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.GetName()))
 	request, err := http.NewRequest(http.MethodPost, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -83,7 +82,7 @@ func TestCreateHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 
 	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table), bodyJson["uuid"])
+		testResource.GetName()), bodyJson["uuid"])
 	dataDB := make([]string, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
 	if err != nil {
@@ -107,8 +106,8 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	testDB = getDB()
-	testDB.Exec(fmt.Sprintf("DELETE FROM %s", testResource.Table))
-	testDB.Exec(fmt.Sprintf("DELETE FROM %s", testBelongsResource.Table))
+	testDB.Exec(fmt.Sprintf("DELETE FROM %s", testResource.GetName()))
+	testDB.Exec(fmt.Sprintf("DELETE FROM %s", testBelongsResource.GetName()))
 }
 
 func shutdown() {

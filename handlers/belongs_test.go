@@ -62,15 +62,15 @@ func TestBelongsToHandler(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s/%s/%s", strcase.KebabCase(testBelongsResource.BelongsToFields[0].Table),
-		data["uuid"], strcase.KebabCase(testBelongsResource.Table))
+	route := fmt.Sprintf("/%s/%s/%s", strcase.KebabCase(testBelongsResource.BelongsToFields()[0].Table),
+		data["uuid"], strcase.KebabCase(testBelongsResource.GetName()))
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	request = GetRequestWithParams(request, map[string]string{"id": data["uuid"].(string)})
 	response := httptest.NewRecorder()
-	handler := http.HandlerFunc(GetBelongsToHandler(base, base.Resource.BelongsToFields[0]))
+	handler := http.HandlerFunc(GetBelongsToHandler(base, base.Resource.BelongsToFields()[0]))
 	handler.ServeHTTP(response, request)
 
 	// Make assertions
@@ -86,7 +86,7 @@ func TestBelongsToHandler(t *testing.T) {
 
 func insertDBEventTestRow(data map[string]interface{}) error {
 	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, user_id, starting_time, hours, created_at, deleted_at) VALUES (?,?,?,?,?,?)",
-		testBelongsResource.Table),
+		testBelongsResource.GetName()),
 		data["uuid"], data["user_id"], data["starting_time"], data["hours"], data["created_at"], data["deleted_at"],
 	)
 	return err

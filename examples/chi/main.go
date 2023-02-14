@@ -30,7 +30,7 @@ func main() {
 	r.Use(examples.LoggingHandler)
 
 	// create routes for rest api
-	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
+	resources := []resource.Resource{examples.UsersResource, examples.RentEventResource, examples.VehicleResource}
 	r = gosimplerest.AddChiHandlers(r, db, logger, nil, resources)
 
 	// iterates over routes and logs them

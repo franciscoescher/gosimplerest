@@ -30,7 +30,7 @@ func (b *Resource) Search(base *Base, query map[string][]string) ([]map[string]a
 		whereStr = "WHERE " + strings.Join(where, " AND ")
 	}
 	response, err := base.DB.Query(fmt.Sprintf(`SELECT %s FROM %s %s ORDER BY %s`, strings.Join(fields, ","),
-		b.Table, whereStr, b.PrimaryKey), values...)
+		b.GetName(), whereStr, b.PrimaryKey()), values...)
 	if err != nil {
 		return nil, err
 	}

@@ -2,9 +2,8 @@ package resource
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"os"
+	"reflect"
 	"sort"
 	"strconv"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
+	"github.com/stoewer/go-strcase"
 	null "gopkg.in/guregu/null.v3"
 )
 
@@ -24,24 +24,8 @@ type Base struct {
 
 // gosimplerest.Resource represents a database table
 type Resource struct {
-	// Table is the name of the table
-	Table string `json:"table"`
-	// PrimaryKey is the name of field that is the primary key
-	PrimaryKey string `json:"primary_key"`
-	// Fields is a list of fields in the table
-	Fields map[string]Field `json:"fields"`
-	// SoftDeleteField is the name of the field that is used for soft deletes
-	// if null, no soft deletes are used
-	SoftDeleteField null.String `json:"soft_delete_field"`
-	// CreatedAtField is the name of the field that is used as createion timestamp
-	// if null, no creation timestamp is generated
-	CreatedAtField null.String `json:"created_at_field"`
-	// UpdatedAtField is the name of the field that is used as update timestamp
-	// if null, no update timestamp is generated
-	UpdatedAtField null.String `json:"updated_at_field"`
-	// BelongsToFields is a list of fields represent a belonging relation with another table,
-	// usually also foreign keys to other tables
-	BelongsToFields []BelongsTo `json:"belongs_to_fields"`
+	// OverrideName is the name of the resource, if null, the name is generated from the struct name
+	OverrideName string `json:"override_name"`
 	// GeneratePrimaryKeyFunc is a function that generates a new primary key
 	// if null, the defaultGeneratePrimaryKeyFunc is used
 	GeneratePrimaryKeyFunc GeneratePrimaryKeyFunc `json:"-"`
@@ -55,6 +39,111 @@ type Resource struct {
 	// AutoIncrementalPK is a flag that indicates if the primary key is autoincremental
 	// and will not use it when inserting a new row
 	AutoIncrementalPK bool `json:"incremental_pk"`
+	//
+	Data any `json:"data"`
+}
+
+func (b *Resource) PrimaryKey() string {
+	f := b.findTaggedFieldName("primary_key")
+	if f.Valid {
+		return f.String
+	}
+	return "id"
+}
+
+func (b *Resource) BelongsToFields() []BelongsTo {
+	out := make([]BelongsTo, 0)
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return out
+	}
+	// iterate over fields
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		// get the tag value
+		tag := field.Tag.Get("belongs_to")
+		// if the tag is not empty, use it as the field name
+		if tag != "" {
+			out = append(out, BelongsTo{Field: field.Name, Table: tag})
+		}
+	}
+	return out
+}
+
+func (b *Resource) SoftDeleteField() null.String {
+	return b.findTaggedFieldName("soft_delete")
+}
+
+func (b *Resource) CreatedAtField() null.String {
+	return b.findTaggedFieldName("created_at")
+}
+
+func (b *Resource) UpdatedAtField() null.String {
+	return b.findTaggedFieldName("updated_at")
+}
+
+func (b *Resource) findTaggedFieldName(tag string) null.String {
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return null.NewString("", false)
+	}
+	// iterate over fields
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		// get the tag value
+		tag := field.Tag.Get(tag)
+		// if the tag is not empty, use it as the field name
+		if tag == "true" {
+			return null.NewString(field.Name, true)
+		}
+	}
+	return null.NewString("", false)
+}
+
+// GetName returns the name of the resource using the reflection package
+func (b *Resource) GetName() string {
+	t := reflect.TypeOf(b.Data)
+	if t != nil {
+		if b.OverrideName != "" {
+			return b.OverrideName
+		}
+		return strcase.KebabCase(t.Name())
+	}
+	return ""
+}
+
+func (b *Resource) GetFields() []Field {
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return make([]Field, 0)
+	}
+	// iterate over fields
+	fields := make([]Field, t.NumField())
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		// get the tag value
+		tag := field.Tag.Get("json")
+		// if the tag is not empty, use it as the field name
+		if tag != "" {
+			fields[i].Validator = field.Tag.Get("validate")
+			fields[i].Unsearchable = field.Tag.Get("unsearchable") == "true"
+		}
+	}
+	return fields
+}
+
+func (b *Resource) GetFieldNames() []string {
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return make([]string, 0)
+	}
+	// iterate over fields
+	fields := make([]string, t.NumField())
+	for i := 0; i < t.NumField(); i++ {
+		fields = append(fields, t.Field(i).Name)
+	}
+	sort.Strings(fields)
+	return fields
 }
 
 type GeneratePrimaryKeyFunc func() any
@@ -69,52 +158,52 @@ type BelongsTo struct {
 	Field string `json:"field"`
 }
 
-// ValidatorFunc is a function that validates a field
-// This function should expect the value to be either string (for the query routes) or
-// the format that the database driver expects (for the insert/update routes)
-type ValidatorFunc func(fl validator.FieldLevel) bool
-
-// FromJSON reads a JSON file and populates the model
-func (b *Resource) FromJSON(filename string) error {
-	file, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal([]byte(file), &b)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // HasField returns true if the model has the given field
 func (b *Resource) HasField(field string) bool {
-	_, ok := b.Fields[field]
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return false
+	}
+	_, ok := t.FieldByName(field)
 	return ok
 }
 
 // HasField returns true if the model has the given field
 func (b *Resource) IsSearchable(field string) bool {
-	val, ok := b.Fields[field]
-	if !ok {
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
 		return false
 	}
-	return !val.Unsearchable
+	f, ok := t.FieldByName(field)
+	return ok && f.Tag.Get("unsearchable") != "true"
 }
 
-func (b *Resource) ValidateFields(v *validator.Validate, data map[string]interface{}) map[string]interface{} {
+func (b *Resource) ValidateFields(v *validator.Validate, data map[string]interface{}) (map[string]interface{}, error) {
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return nil, fmt.Errorf("model has no fields")
+	}
 	rules := make(map[string]interface{}, len(data))
 	for k := range data {
-		rules[k] = b.Fields[k].Validator
+		f, ok := t.FieldByName(k)
+		if !ok {
+			return nil, fmt.Errorf("field %s not found", k)
+		}
+		rules[k] = f.Tag.Get("validate")
 	}
-	return v.ValidateMap(data, rules)
+	return v.ValidateMap(data, rules), nil
 }
 
 func (b *Resource) ValidateField(v *validator.Validate, field string, value any) error {
-	vf := b.Fields[field].Validator
-	if vf == "" {
-		return nil
+	t := reflect.TypeOf(b.Data)
+	if t == nil {
+		return fmt.Errorf("model has no fields")
 	}
+	f, ok := t.FieldByName(field)
+	if !ok {
+		return fmt.Errorf("field %s not found", field)
+	}
+	vf := f.Tag.Get("validate")
 	err := v.Var(value, vf)
 	if err != nil {
 		return fmt.Errorf("field %s is invalid for validation rule: %s", field, vf)
@@ -135,22 +224,11 @@ func (b *Resource) defaultGeneratePrimaryKeyFunc() string {
 	return id.String()
 }
 
-func (b *Resource) GetFieldNames() []string {
-	fields := make([]string, len(b.Fields))
-	i := 0
-	for field := range b.Fields {
-		fields[i] = field
-		i++
-	}
-	sort.Strings(fields)
-	return fields
-}
-
 // parseRow parses a row from the database, returning a map with
 // the field names as keys and the values as values
 func (b *Resource) parseRow(values []any) (map[string]any, error) {
 	fields := b.GetFieldNames()
-	result := make(map[string]any, len(b.Fields))
+	result := make(map[string]any, len(b.GetFieldNames()))
 	for i, v := range values {
 		casted, err := castVal(v)
 		if err != nil {
@@ -209,8 +287,8 @@ func castVal(v any) (any, error) {
 func (b *Resource) parseRows(rows *sql.Rows) ([]map[string]any, error) {
 	results := make([]map[string]any, 0)
 	for rows.Next() {
-		values := make([]any, len(b.Fields))
-		scanArgs := make([]any, len(b.Fields))
+		values := make([]any, len(b.GetFieldNames()))
+		scanArgs := make([]any, len(b.GetFieldNames()))
 		for i := range values {
 			scanArgs[i] = &values[i]
 		}

@@ -18,7 +18,7 @@ func (b *Resource) Insert(base *Base, data map[string]any) (int64, error) {
 	values := make([]any, l)
 	i := 0
 	for key, element := range data {
-		if key == b.PrimaryKey && b.AutoIncrementalPK {
+		if key == b.PrimaryKey() && b.AutoIncrementalPK {
 			continue
 		}
 		fields[i] = key
@@ -28,7 +28,7 @@ func (b *Resource) Insert(base *Base, data map[string]any) (int64, error) {
 	logrus.Info("AQUIIII")
 	logrus.Info(values)
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, b.Table, strings.Join(fields, ","), in)
+	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, b.GetName(), strings.Join(fields, ","), in)
 	result, err := base.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err

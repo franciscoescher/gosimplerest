@@ -25,7 +25,7 @@ func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Va
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetName()))
 		nameID := fmt.Sprintf("%s/:id", name)
 		r.Post(name, FiberHandler(handlers.CreateHandler(base)))
 		r.Get(nameID, FiberHandler(handlers.RetrieveHandler(base)))
@@ -33,7 +33,7 @@ func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Va
 		r.Delete(nameID, FiberHandler(handlers.DeleteHandler(base)))
 		r.Get(name, FiberHandler(handlers.SearchHandler(base)))
 
-		for _, belongsTo := range resources[i].BelongsToFields {
+		for _, belongsTo := range resources[i].BelongsToFields() {
 			nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
 			r.Get(nameBelongsTo, FiberHandler(handlers.GetBelongsToHandler(base, belongsTo)))
 		}

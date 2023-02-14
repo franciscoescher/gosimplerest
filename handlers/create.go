@@ -26,16 +26,16 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 
 		if !base.Resource.AutoIncrementalPK {
 			pk := base.Resource.GeneratePrimaryKey()
-			data[base.Resource.PrimaryKey] = pk
+			data[base.Resource.PrimaryKey()] = pk
 		}
-		if base.Resource.CreatedAtField.Valid {
-			data[base.Resource.CreatedAtField.String] = time.Now()
+		if base.Resource.CreatedAtField().Valid {
+			data[base.Resource.CreatedAtField().String] = time.Now()
 		}
-		if base.Resource.UpdatedAtField.Valid {
-			data[base.Resource.UpdatedAtField.String] = time.Now()
+		if base.Resource.UpdatedAtField().Valid {
+			data[base.Resource.UpdatedAtField().String] = time.Now()
 		}
-		if base.Resource.SoftDeleteField.Valid {
-			data[base.Resource.SoftDeleteField.String] = nil
+		if base.Resource.SoftDeleteField().Valid {
+			data[base.Resource.SoftDeleteField().String] = nil
 		}
 
 		// perform data validation
@@ -48,10 +48,15 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 			}
 		}
 		// validates values
-		errs := base.Resource.ValidateFields(base.Validate, data)
-		if len(errs) > 0 {
+		validation, err := base.Resource.ValidateFields(base.Validate, data)
+		if err != nil {
+			base.Logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if len(validation) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			encodeJsonError(w, fmt.Sprintf("%s", errs))
+			encodeJsonError(w, fmt.Sprintf("%s", validation))
 			return
 		}
 
@@ -62,10 +67,10 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 			return
 		}
 		if base.Resource.AutoIncrementalPK {
-			data[base.Resource.PrimaryKey] = id
+			data[base.Resource.PrimaryKey()] = id
 		}
 
-		result := map[string]any{base.Resource.PrimaryKey: data[base.Resource.PrimaryKey]}
+		result := map[string]any{base.Resource.PrimaryKey(): data[base.Resource.PrimaryKey()]}
 		json.NewEncoder(w).Encode(result)
 	}
 }

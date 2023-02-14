@@ -28,7 +28,7 @@ func TestDeleteHandler(t *testing.T) {
 		"created_at": t1.Add(-time.Hour * 24),
 	}
 
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table),
+	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.GetName()),
 		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
 	)
 	if err != nil {
@@ -36,7 +36,7 @@ func TestDeleteHandler(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.GetName()))
 	request, err := http.NewRequest(http.MethodDelete, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -50,7 +50,7 @@ func TestDeleteHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 
 	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT deleted_at FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table), data["uuid"])
+		testResource.GetName()), data["uuid"])
 	dataDB := make([]string, 1)
 	err = sqlResult.Scan(&dataDB[0])
 	if err != nil {

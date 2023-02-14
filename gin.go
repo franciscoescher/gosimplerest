@@ -23,8 +23,9 @@ func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Val
 		l.Out = io.Discard
 	}
 	for i := range resources {
+		logrus.Info(resources[i].GetName())
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetName()))
 		nameID := fmt.Sprintf("%s/:id", name)
 		r.POST(name, GinHandler(handlers.CreateHandler(base)))
 		r.GET(nameID, GinHandler(handlers.RetrieveHandler(base)))
@@ -32,7 +33,7 @@ func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Val
 		r.DELETE(nameID, GinHandler(handlers.DeleteHandler(base)))
 		r.GET(name, GinHandler(handlers.SearchHandler(base)))
 
-		for _, belongsTo := range resources[i].BelongsToFields {
+		for _, belongsTo := range resources[i].BelongsToFields() {
 			nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
 			r.GET(nameBelongsTo, GinHandler(handlers.GetBelongsToHandler(base, belongsTo)))
 		}

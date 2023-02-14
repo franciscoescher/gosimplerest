@@ -54,69 +54,55 @@ CREATE TABLE `rent_events` (
 
 import (
 	"github.com/franciscoescher/gosimplerest/resource"
-
 	"gopkg.in/guregu/null.v3"
 )
 
+type Users struct {
+	UUID       string      `json:"uuid" primary_key:"true"`
+	FirstName  string      `json:"first_name"`
+	LastName   string      `json:"last_name"`
+	Phone      string      `json:"phone"`
+	CreditCard string      `json:"credit_card"`
+	CreatedAt  string      `json:"created_at" created_at:"true"`
+	DeletedAt  null.String `json:"deleted_at" soft_delete:"true"`
+	UpdatedAt  null.String `json:"updated_at" updated_at:"true"`
+}
+
 var UserResource = resource.Resource{
-	Table:      "users",
-	PrimaryKey: "uuid",
-	Fields: map[string]resource.Field{
-		"uuid":        {Validator: "uuid4"},
-		"first_name":  {},
-		"last_name":   {},
-		"phone":       {},
-		"credit_card": {Unsearchable: true},
-		"created_at":  {},
-		"deleted_at":  {},
-		"updated_at":  {},
-	},
-	SoftDeleteField: null.NewString("deleted_at", true),
-	CreatedAtField:  null.NewString("created_at", true),
-	UpdatedAtField:  null.NewString("updated_at", true),
+	Data: Users{},
+}
+
+type RentEvents struct {
+	UUID         string      `json:"uuid" primary_key:"true"`
+	UserID       string      `json:"user_id" belongs_to:"users"`
+	VehicleID    string      `json:"vehicle_id" belongs_to:"vehicles"`
+	StartingTIme string      `json:"starting_time"`
+	Hours        int         `json:"hours"`
+	CheckinTime  string      `json:"checkin_time"`
+	DropoffTime  string      `json:"dropoff_time"`
+	CancelTime   string      `json:"cancel_time"`
+	CreatedAt    string      `json:"created_at" created_at:"true"`
+	DeletedAt    null.String `json:"deleted_at" soft_delete:"true"`
+	UpdatedAt    null.String `json:"updated_at" updated_at:"true"`
 }
 
 var RentEventResource = resource.Resource{
-	Table:      "rent_events",
-	PrimaryKey: "uuid",
-	Fields: map[string]resource.Field{
-		"uuid":          {Validator: "uuid4"},
-		"user_id":       {Validator: "uuid4"},
-		"vehicle_id":    {Validator: "uuid4"},
-		"starting_time": {},
-		"hours":         {},
-		"checkin_time":  {},
-		"dropoff_time":  {},
-		"cancel_time":   {},
-		"created_at":    {},
-		"deleted_at":    {},
-		"updated_at":    {},
-	},
-	SoftDeleteField: null.NewString("deleted_at", true),
-	CreatedAtField:  null.NewString("created_at", true),
-	UpdatedAtField:  null.NewString("updated_at", true),
-	BelongsToFields: []resource.BelongsTo{
-		{Table: "users", Field: "user_id"},
-		{Table: "vehicles", Field: "vehicle_id"},
-	},
+	Data: RentEvents{},
+}
+
+type Vehicles struct {
+	UUID         string      `json:"uuid" primary_key:"true"`
+	LicensePlate string      `json:"license_plate"`
+	State        string      `json:"state"`
+	Archived     bool        `json:"archived"`
+	Year         int         `json:"year"`
+	PricePerHour float64     `json:"price_per_hour"`
+	Lot          int         `json:"lot"`
+	CreatedAt    string      `json:"created_at" created_at:"true"`
+	DeletedAt    null.String `json:"deleted_at" soft_delete:"true"`
+	UpdatedAt    null.String `json:"updated_at" updated_at:"true"`
 }
 
 var VehicleResource = resource.Resource{
-	Table:      "vehicles",
-	PrimaryKey: "uuid",
-	Fields: map[string]resource.Field{
-		"uuid":           {Validator: "uuid4"},
-		"license_plate":  {},
-		"state":          {},
-		"archived":       {},
-		"year":           {},
-		"price_per_hour": {},
-		"lot":            {},
-		"created_at":     {},
-		"deleted_at":     {},
-		"updated_at":     {},
-	},
-	SoftDeleteField: null.NewString("deleted_at", true),
-	CreatedAtField:  null.NewString("created_at", true),
-	UpdatedAtField:  null.NewString("updated_at", true),
+	Data: Vehicles{},
 }

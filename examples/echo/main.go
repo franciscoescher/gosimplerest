@@ -29,7 +29,7 @@ func main() {
 	r.Use(echo.WrapMiddleware(examples.LoggingHandler))
 
 	// create routes for rest api
-	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
+	resources := []resource.Resource{examples.UsersResource, examples.RentEventResource, examples.VehicleResource}
 	gosimplerest.AddEchoHandlers(r, db, logger, nil, resources)
 
 	log.Fatal(r.Start(":3333"))

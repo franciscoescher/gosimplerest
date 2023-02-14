@@ -24,7 +24,7 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
+		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].GetName()))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
 		r.Post(name, ChiHandler(handlers.CreateHandler(base)))
@@ -33,7 +33,7 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 		r.Delete(nameID, ChiHandler(handlers.DeleteHandler(base)))
 		r.Get(name, ChiHandler(handlers.SearchHandler(base)))
 
-		for _, belongsTo := range resources[i].BelongsToFields {
+		for _, belongsTo := range resources[i].BelongsToFields() {
 			nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
 			r.Get(nameBelongsTo, ChiHandler(handlers.GetBelongsToHandler(base, belongsTo)))
 		}
