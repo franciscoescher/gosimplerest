@@ -24,7 +24,8 @@ type Base struct {
 	Validate *validator.Validate
 }
 
-// gosimplerest.Resource represents a database table
+// gosimplerest.Resource represents a data resource, such as
+// a database table, a file in a storage system, etc.
 type Resource struct {
 	// Table is the name of the table
 	Table string `json:"table"`
@@ -62,19 +63,20 @@ type Resource struct {
 type GeneratePrimaryKeyFunc func() any
 
 type Field struct {
-	Validator    string `json:"validator"`
-	Unsearchable bool   `json:"unsearchable"`
+	// Validator is the validation rules for the field, using the
+	// package github.com/go-playground/validator/v10
+	Validator string `json:"validator"`
+	// Unsearchable is a flag that indicates that a field can not be used
+	// as query parameter in the search route
+	Unsearchable bool `json:"unsearchable"`
 }
 
 type BelongsTo struct {
+	// Table of the other resource that this resource belongs to
 	Table string `json:"table"`
+	// Field of the current resource that is the foreign key to the table
 	Field string `json:"field"`
 }
-
-// ValidatorFunc is a function that validates a field
-// This function should expect the value to be either string (for the query routes) or
-// the format that the database driver expects (for the insert/update routes)
-type ValidatorFunc func(fl validator.FieldLevel) bool
 
 // FromJSON reads a JSON file and populates the model
 func (b *Resource) FromJSON(filename string) error {
