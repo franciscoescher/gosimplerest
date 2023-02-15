@@ -45,7 +45,7 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 			}
 		}
 		// validates values
-		errs := base.Resource.ValidateFields(base.Validate, data)
+		errs := base.Resource.ValidateAllFields(base.Validate, data)
 		if len(errs) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
 			encodeJsonError(w, fmt.Sprintf("%s", errs))
