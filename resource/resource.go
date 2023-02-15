@@ -213,6 +213,7 @@ func (b *Resource) ValidateInputFields(v *validator.Validate, data map[string]in
 	return v.ValidateMap(data, rules)
 }
 
+// ValidateField validates the given field of the model against the given data
 func (b *Resource) ValidateField(v *validator.Validate, field string, value any) error {
 	vf := b.Fields[field].Validator
 	if vf == "" {
