@@ -265,6 +265,7 @@ func (b *Resource) parseRow(values []any) (map[string]any, error) {
 	return result, nil
 }
 
+// castVal casts the value incomming from the database to a valid type
 func castVal(v any) (any, error) {
 	// if nil, set to nil
 	if v == nil {
@@ -310,6 +311,7 @@ func castVal(v any) (any, error) {
 	return nil, fmt.Errorf("failed on if for type %T of %v", v, v)
 }
 
+// parseRows parses a row from the database, returning a map with the field names as keys and the values as values
 func (b *Resource) parseRows(rows *sql.Rows) ([]map[string]any, error) {
 	results := make([]map[string]any, 0)
 	for rows.Next() {
