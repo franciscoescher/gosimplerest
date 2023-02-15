@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/franciscoescher/gosimplerest"
+	"github.com/franciscoescher/gosimplerest/examples"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/guregu/null.v3"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -28,25 +28,7 @@ func main() {
 	r := gin.Default()
 
 	// create routes for rest api
-	resources := []resource.Resource{{
-		Table:      "users",
-		PrimaryKey: "uuid",
-		Fields: map[string]resource.Field{
-			"uuid":        {Validator: "uuid4"},
-			"first_name":  {},
-			"last_name":   {},
-			"phone":       {},
-			"credit_card": {Unsearchable: true},
-			"created_at":  {},
-			"deleted_at":  {},
-			"updated_at":  {},
-		},
-		SoftDeleteField: null.NewString("deleted_at", true),
-		CreatedAtField:  null.NewString("created_at", true),
-		UpdatedAtField:  null.NewString("updated_at", true),
-	}}
-
-	// This is the function that registers the routes!!!
+	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
 	gosimplerest.AddGinHandlers(r, db, logger, nil, resources)
 
 	log.Fatal(r.Run(":3333"))
