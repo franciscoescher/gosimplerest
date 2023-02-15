@@ -234,11 +234,13 @@ func (b *Resource) GeneratePrimaryKey() any {
 	return b.defaultGeneratePrimaryKeyFunc()
 }
 
+// defaultGeneratePrimaryKeyFunc generates a new primary key using the uuid package
 func (b *Resource) defaultGeneratePrimaryKeyFunc() string {
 	id, _ := uuid.NewV4()
 	return id.String()
 }
 
+// GetFieldNames returns a list of strings with the field names of the model
 func (b *Resource) GetFieldNames() []string {
 	fields := make([]string, len(b.Fields))
 	i := 0
