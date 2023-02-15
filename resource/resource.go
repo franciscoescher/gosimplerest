@@ -189,6 +189,7 @@ func (b *Resource) IsSearchable(field string) bool {
 	return !val.Unsearchable
 }
 
+// ValidateAllFields validates all fields of the model against the given data
 func (b *Resource) ValidateAllFields(v *validator.Validate, data map[string]interface{}) map[string]interface{} {
 	values := make(map[string]interface{}, len(data))
 	rules := make(map[string]interface{}, len(data))
@@ -203,6 +204,7 @@ func (b *Resource) ValidateAllFields(v *validator.Validate, data map[string]inte
 	return v.ValidateMap(values, rules)
 }
 
+// ValidateInputFields validates the given fields of the model against the given data
 func (b *Resource) ValidateInputFields(v *validator.Validate, data map[string]interface{}) map[string]interface{} {
 	rules := make(map[string]interface{}, len(data))
 	for k := range data {
