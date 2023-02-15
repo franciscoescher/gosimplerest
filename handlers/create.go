@@ -70,9 +70,12 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 // unmarschalBody converts the body of the request to a map of strings and interfaces
 func unmarschalBody(r *http.Request) (map[string]any, error) {
 	b := new(bytes.Buffer)
-	b.ReadFrom(r.Body)
+	_, err := b.ReadFrom(r.Body)
+	if err != nil {
+		return nil, err
+	}
 	var objmap map[string]any
-	err := json.Unmarshal(b.Bytes(), &objmap)
+	err = json.Unmarshal(b.Bytes(), &objmap)
 	return objmap, err
 }
 
