@@ -10,9 +10,6 @@ import (
 
 // RetrieveHandler returns a handler for the GET method
 func RetrieveHandler(base *resource.Base) http.HandlerFunc {
-	if base.Resource.OmitRetrieveRoute {
-		return NotFoundHandler
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 

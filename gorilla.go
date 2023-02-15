@@ -28,15 +28,26 @@ func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *valida
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
-		r.HandleFunc(name, GorillaHandler(mid, handlers.CreateHandler(base))).Methods(http.MethodPost)
-		r.HandleFunc(nameID, GorillaHandler(mid, handlers.RetrieveHandler(base))).Methods(http.MethodGet)
-		r.HandleFunc(name, GorillaHandler(mid, handlers.UpdateHandler(base))).Methods(http.MethodPut)
-		r.HandleFunc(nameID, GorillaHandler(mid, handlers.DeleteHandler(base))).Methods(http.MethodDelete)
-		r.HandleFunc(name, GorillaHandler(mid, handlers.SearchHandler(base))).Methods(http.MethodGet)
-
-		for _, belongsTo := range resources[i].BelongsToFields {
-			nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
-			r.HandleFunc(nameBelongsTo, GorillaHandler(mid, handlers.GetBelongsToHandler(base, belongsTo))).Methods(http.MethodGet)
+		if !resources[i].OmitCreateRoute {
+			r.HandleFunc(name, GorillaHandler(mid, handlers.CreateHandler(base))).Methods(http.MethodPost)
+		}
+		if !resources[i].OmitRetrieveRoute {
+			r.HandleFunc(nameID, GorillaHandler(mid, handlers.RetrieveHandler(base))).Methods(http.MethodGet)
+		}
+		if !resources[i].OmitUpdateRoute {
+			r.HandleFunc(name, GorillaHandler(mid, handlers.UpdateHandler(base))).Methods(http.MethodPut)
+		}
+		if !resources[i].OmitDeleteRoute {
+			r.HandleFunc(nameID, GorillaHandler(mid, handlers.DeleteHandler(base))).Methods(http.MethodDelete)
+		}
+		if !resources[i].OmitSearchRoute {
+			r.HandleFunc(name, GorillaHandler(mid, handlers.SearchHandler(base))).Methods(http.MethodGet)
+		}
+		if !resources[i].OmitBelongsToRoutes {
+			for _, belongsTo := range resources[i].BelongsToFields {
+				nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
+				r.HandleFunc(nameBelongsTo, GorillaHandler(mid, handlers.GetBelongsToHandler(base, belongsTo))).Methods(http.MethodGet)
+			}
 		}
 	}
 	return r

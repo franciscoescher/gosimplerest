@@ -11,9 +11,6 @@ import (
 
 // UpdateHandler returns a handler for the PUT method
 func UpdateHandler(base *resource.Base) http.HandlerFunc {
-	if base.Resource.OmitUpdateRoute {
-		return NotFoundHandler
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarschalBody(r)
 		if err != nil {

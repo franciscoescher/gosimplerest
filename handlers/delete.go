@@ -8,9 +8,6 @@ import (
 
 // DeleteHandler returns a handler for the DELETE method
 func DeleteHandler(base *resource.Base) http.HandlerFunc {
-	if base.Resource.OmitDeleteRoute {
-		return NotFoundHandler
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 

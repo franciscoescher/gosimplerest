@@ -27,15 +27,27 @@ func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Va
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
 		nameID := fmt.Sprintf("%s/:id", name)
-		r.Post(name, FiberHandler(handlers.CreateHandler(base)))
-		r.Get(nameID, FiberHandler(handlers.RetrieveHandler(base)))
-		r.Put(name, FiberHandler(handlers.UpdateHandler(base)))
-		r.Delete(nameID, FiberHandler(handlers.DeleteHandler(base)))
-		r.Get(name, FiberHandler(handlers.SearchHandler(base)))
 
-		for _, belongsTo := range resources[i].BelongsToFields {
-			nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
-			r.Get(nameBelongsTo, FiberHandler(handlers.GetBelongsToHandler(base, belongsTo)))
+		if !resources[i].OmitCreateRoute {
+			r.Post(name, FiberHandler(handlers.CreateHandler(base)))
+		}
+		if !resources[i].OmitRetrieveRoute {
+			r.Get(nameID, FiberHandler(handlers.RetrieveHandler(base)))
+		}
+		if !resources[i].OmitUpdateRoute {
+			r.Put(name, FiberHandler(handlers.UpdateHandler(base)))
+		}
+		if !resources[i].OmitDeleteRoute {
+			r.Delete(nameID, FiberHandler(handlers.DeleteHandler(base)))
+		}
+		if !resources[i].OmitSearchRoute {
+			r.Get(name, FiberHandler(handlers.SearchHandler(base)))
+		}
+		if !resources[i].OmitBelongsToRoutes {
+			for _, belongsTo := range resources[i].BelongsToFields {
+				nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
+				r.Get(nameBelongsTo, FiberHandler(handlers.GetBelongsToHandler(base, belongsTo)))
+			}
 		}
 	}
 }

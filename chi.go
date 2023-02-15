@@ -27,15 +27,26 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
 		nameID := fmt.Sprintf("%s/{id}", name)
 
-		r.Post(name, ChiHandler(handlers.CreateHandler(base)))
-		r.Get(nameID, ChiHandler(handlers.RetrieveHandler(base)))
-		r.Put(name, ChiHandler(handlers.UpdateHandler(base)))
-		r.Delete(nameID, ChiHandler(handlers.DeleteHandler(base)))
-		r.Get(name, ChiHandler(handlers.SearchHandler(base)))
-
-		for _, belongsTo := range resources[i].BelongsToFields {
-			nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
-			r.Get(nameBelongsTo, ChiHandler(handlers.GetBelongsToHandler(base, belongsTo)))
+		if !resources[i].OmitCreateRoute {
+			r.Post(name, ChiHandler(handlers.CreateHandler(base)))
+		}
+		if !resources[i].OmitRetrieveRoute {
+			r.Get(nameID, ChiHandler(handlers.RetrieveHandler(base)))
+		}
+		if !resources[i].OmitUpdateRoute {
+			r.Put(name, ChiHandler(handlers.UpdateHandler(base)))
+		}
+		if !resources[i].OmitDeleteRoute {
+			r.Delete(nameID, ChiHandler(handlers.DeleteHandler(base)))
+		}
+		if !resources[i].OmitSearchRoute {
+			r.Get(name, ChiHandler(handlers.SearchHandler(base)))
+		}
+		if !resources[i].OmitBelongsToRoutes {
+			for _, belongsTo := range resources[i].BelongsToFields {
+				nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
+				r.Get(nameBelongsTo, ChiHandler(handlers.GetBelongsToHandler(base, belongsTo)))
+			}
 		}
 	}
 	return r

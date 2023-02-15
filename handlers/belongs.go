@@ -10,9 +10,6 @@ import (
 
 // GetBelongsToHandler returns a handler for the GET method of the belongs to relationship
 func GetBelongsToHandler(base *resource.Base, belongsTo resource.BelongsTo) http.HandlerFunc {
-	if base.Resource.OmitBelongsToRoutes {
-		return NotFoundHandler
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 

@@ -13,9 +13,6 @@ import (
 
 // CreateHandler returns a handler for the POST method
 func CreateHandler(base *resource.Base) http.HandlerFunc {
-	if base.Resource.OmitCreateRoute {
-		return NotFoundHandler
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarschalBody(r)
 		if err != nil {

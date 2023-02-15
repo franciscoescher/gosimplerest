@@ -12,9 +12,6 @@ import (
 
 // SearchHandler returns a handler for the GET method with query params
 func SearchHandler(base *resource.Base) http.HandlerFunc {
-	if base.Resource.OmitSearchRoute {
-		return NotFoundHandler
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 
