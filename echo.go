@@ -49,12 +49,6 @@ func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Val
 			r.HEAD(nameID, EchoHandler(handlers.RetrieveHandler(base)))
 			r.HEAD(name, EchoHandler(handlers.SearchHandler(base)))
 		}
-		if !resources[i].OmitBelongsToRoutes {
-			for _, belongsTo := range resources[i].BelongsToFields {
-				nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
-				r.GET(nameBelongsTo, EchoHandler(handlers.GetBelongsToHandler(base, belongsTo)))
-			}
-		}
 	}
 }
 

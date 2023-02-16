@@ -46,7 +46,6 @@ var testBelongsResource = resource.Resource{
 		"deleted_at":    {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
-	BelongsToFields: []resource.BelongsTo{{Table: "users_test", Field: "user_id"}},
 }
 
 func TestCreateHandler(t *testing.T) {

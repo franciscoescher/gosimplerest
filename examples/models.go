@@ -95,10 +95,6 @@ var RentEventResource = resource.Resource{
 	SoftDeleteField: null.NewString("deleted_at", true),
 	CreatedAtField:  null.NewString("created_at", true),
 	UpdatedAtField:  null.NewString("updated_at", true),
-	BelongsToFields: []resource.BelongsTo{
-		{Table: "users", Field: "user_id"},
-		{Table: "vehicles", Field: "vehicle_id"},
-	},
 }
 
 var VehicleResource = resource.Resource{

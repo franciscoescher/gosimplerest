@@ -50,12 +50,6 @@ func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *valida
 			r.HandleFunc(nameID, GorillaHandler(mid, handlers.RetrieveHandler(base))).Methods(http.MethodHead)
 			r.HandleFunc(name, GorillaHandler(mid, handlers.SearchHandler(base))).Methods(http.MethodHead)
 		}
-		if !resources[i].OmitBelongsToRoutes {
-			for _, belongsTo := range resources[i].BelongsToFields {
-				nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)
-				r.HandleFunc(nameBelongsTo, GorillaHandler(mid, handlers.GetBelongsToHandler(base, belongsTo))).Methods(http.MethodGet)
-			}
-		}
 	}
 	return r
 }

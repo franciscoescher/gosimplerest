@@ -50,12 +50,6 @@ func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Va
 			r.Head(nameID, FiberHandler(handlers.RetrieveHandler(base)))
 			r.Head(name, FiberHandler(handlers.SearchHandler(base)))
 		}
-		if !resources[i].OmitBelongsToRoutes {
-			for _, belongsTo := range resources[i].BelongsToFields {
-				nameBelongsTo := fmt.Sprintf("/%s/:id%s", strcase.KebabCase(belongsTo.Table), name)
-				r.Get(nameBelongsTo, FiberHandler(handlers.GetBelongsToHandler(base, belongsTo)))
-			}
-		}
 	}
 }
 

@@ -41,18 +41,17 @@ func main() {
 	// load resource from json file
 	user := resource.Resource{}
 	type Users struct {
-		UUID      string      `json:"uuid" validate:"required" pk:"true"`
-		FirstName string      `json:"first_name" validate:"required"`
-		Phone     string      `json:"phone" validate:"required"`
-		CreatedAt time.Time   `json:"created_at" created_at:"true"`
-		DeletedAt null.Time   `json:"deleted_at" soft_delete:"true"`
-		DomainID  null.String `json:"domain" belongs_to:"domains"`
+		UUID      string    `json:"uuid" validate:"required" pk:"true"`
+		FirstName string    `json:"first_name" validate:"required"`
+		Phone     string    `json:"phone" validate:"required"`
+		CreatedAt time.Time `json:"created_at" created_at:"true"`
+		DeletedAt null.Time `json:"deleted_at" soft_delete:"true"`
 	}
 	err := user.FromStruct(Users{})
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	fmt.Println(fmt.Sprintf("%+v", user))
+	fmt.Printf("%+v\n", user)
 
 	// create routes for rest api
 	r := gin.Default()

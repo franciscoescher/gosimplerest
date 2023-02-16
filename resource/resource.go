@@ -48,9 +48,6 @@ type Resource struct {
 	// UpdatedAtField is the name of the field that is used as update timestamp
 	// if null, no update timestamp is generated
 	UpdatedAtField null.String `json:"updated_at_field"`
-	// BelongsToFields is a list of fields represent a belonging relation with another table,
-	// usually also foreign keys to other tables
-	BelongsToFields []BelongsTo `json:"belongs_to_fields"`
 	// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
 	OmitCreateRoute        bool `json:"omit_create_route"`
 	OmitRetrieveRoute      bool `json:"omit_retrieve_route"`
@@ -58,7 +55,6 @@ type Resource struct {
 	OmitPartialUpdateRoute bool `json:"omit_partial_update_route"`
 	OmitDeleteRoute        bool `json:"omit_delete_route"`
 	OmitSearchRoute        bool `json:"omit_search_route"`
-	OmitBelongsToRoutes    bool `json:"omit_belongs_to_routes"`
 	OmitHeadRoutes         bool `json:"omit_head_routes"`
 }
 
@@ -71,13 +67,6 @@ type Field struct {
 	// Unsearchable is a flag that indicates that a field can not be used
 	// as query parameter in the search route
 	Unsearchable bool `json:"unsearchable"`
-}
-
-type BelongsTo struct {
-	// Table of the other resource that this resource belongs to
-	Table string `json:"table"`
-	// Field of the current resource that is the foreign key to the table
-	Field string `json:"field"`
 }
 
 // FromJSON reads a JSON file and populates the model
@@ -105,7 +94,6 @@ The struct should have the following tags:
   - soft_delete: used to get the soft delete field
   - created_at: used to get the created at field
   - updated_at: used to get the updated at field
-  - belongs_to: used to get the belongs to fields
   - validate: used to get the validation rules
   - unsearchable: used to get the unsearchable fields
   - pk: used to get the primary key
@@ -123,7 +111,6 @@ func (b *Resource) FromStruct(s any) error {
 	// Fields
 	// iterate over fields
 	fields := make(map[string]Field, t.NumField())
-	belongs := make([]BelongsTo, 0)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		// get the field name
@@ -162,16 +149,8 @@ func (b *Resource) FromStruct(s any) error {
 		if field.Tag.Get("updated_at") == "true" {
 			b.UpdatedAtField = null.StringFrom(name)
 		}
-		// get the belongs to fields
-		if field.Tag.Get("belongs_to") != "" {
-			belongs = append(b.BelongsToFields, BelongsTo{
-				Field: name,
-				Table: field.Tag.Get("belongs_to"),
-			})
-		}
 	}
 	b.Fields = fields
-	b.BelongsToFields = belongs
 
 	return nil
 }
