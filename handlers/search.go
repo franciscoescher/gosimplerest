@@ -13,6 +13,8 @@ import (
 // SearchHandler returns a handler for the GET method with query params
 func SearchHandler(base *resource.Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer cleanBodyIfHead(r, w)
+
 		query := r.URL.Query()
 
 		// validates that all fields in data are in the model

@@ -45,6 +45,10 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 		if !resources[i].OmitSearchRoute {
 			r.Get(name, ChiHandler(handlers.SearchHandler(base)))
 		}
+		if !resources[i].OmitHeadRoute {
+			r.Head(nameID, ChiHandler(handlers.RetrieveHandler(base)))
+			r.Head(name, ChiHandler(handlers.SearchHandler(base)))
+		}
 		if !resources[i].OmitBelongsToRoutes {
 			for _, belongsTo := range resources[i].BelongsToFields {
 				nameBelongsTo := fmt.Sprintf("/%s/{id}%s", strcase.KebabCase(belongsTo.Table), name)

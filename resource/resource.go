@@ -59,6 +59,7 @@ type Resource struct {
 	OmitDeleteRoute        bool `json:"omit_delete_route"`
 	OmitSearchRoute        bool `json:"omit_search_route"`
 	OmitBelongsToRoutes    bool `json:"omit_belongs_to_routes"`
+	OmitHeadRoute          bool `json:"omit_head_route"`
 }
 
 type GeneratePrimaryKeyFunc func() any
