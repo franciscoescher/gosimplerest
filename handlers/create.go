@@ -67,7 +67,8 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 	}
 }
 
-// unmarshalBody converts the body of the request to a map of strings and interfaces
+// unmarshalBody converts the body of the request to a map where
+// the keys are the field names and the values are the field values
 func unmarshalBody(r *http.Request) (map[string]any, error) {
 	b := new(bytes.Buffer)
 	_, err := b.ReadFrom(r.Body)
