@@ -36,6 +36,9 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 		if !resources[i].OmitUpdateRoute {
 			r.Put(name, ChiHandler(handlers.UpdateHandler(base)))
 		}
+		if !resources[i].OmitPartialUpdateRoute {
+			r.Patch(name, ChiHandler(handlers.UpdateHandler(base)))
+		}
 		if !resources[i].OmitDeleteRoute {
 			r.Delete(nameID, ChiHandler(handlers.DeleteHandler(base)))
 		}

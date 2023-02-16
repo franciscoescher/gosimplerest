@@ -50,7 +50,7 @@ func TestUpdateHandler(t *testing.T) {
 
 	// Make the request
 	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
-	request, err := http.NewRequest(http.MethodPut, route, bytes.NewBuffer(jsonData))
+	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
 	}

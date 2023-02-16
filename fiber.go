@@ -37,6 +37,9 @@ func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Va
 		if !resources[i].OmitUpdateRoute {
 			r.Put(name, FiberHandler(handlers.UpdateHandler(base)))
 		}
+		if !resources[i].OmitPartialUpdateRoute {
+			r.Patch(name, FiberHandler(handlers.UpdateHandler(base)))
+		}
 		if !resources[i].OmitDeleteRoute {
 			r.Delete(nameID, FiberHandler(handlers.DeleteHandler(base)))
 		}

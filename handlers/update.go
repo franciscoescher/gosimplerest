@@ -9,7 +9,7 @@ import (
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
-// UpdateHandler returns a handler for the PUT method
+// UpdateHandler returns a handler for the PATCH method
 func UpdateHandler(base *resource.Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarshalBody(r)
@@ -25,6 +25,15 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			encodeJsonError(w, "primery key is required")
 			return
+		}
+
+		// adds missing fields if method is PUT
+		if r.Method == http.MethodPut {
+			for field := range base.Resource.Fields {
+				if _, ok := data[field]; !ok {
+					data[field] = nil
+				}
+			}
 		}
 
 		if base.Resource.UpdatedAtField.Valid {

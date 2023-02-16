@@ -36,6 +36,9 @@ func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Val
 		if !resources[i].OmitUpdateRoute {
 			r.PUT(name, EchoHandler(handlers.UpdateHandler(base)))
 		}
+		if !resources[i].OmitPartialUpdateRoute {
+			r.PATCH(name, EchoHandler(handlers.UpdateHandler(base)))
+		}
 		if !resources[i].OmitDeleteRoute {
 			r.DELETE(nameID, EchoHandler(handlers.DeleteHandler(base)))
 		}

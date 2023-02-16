@@ -52,12 +52,13 @@ type Resource struct {
 	// usually also foreign keys to other tables
 	BelongsToFields []BelongsTo `json:"belongs_to_fields"`
 	// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
-	OmitCreateRoute     bool `json:"omit_create_route"`
-	OmitRetrieveRoute   bool `json:"omit_retrieve_route"`
-	OmitUpdateRoute     bool `json:"omit_update_route"`
-	OmitDeleteRoute     bool `json:"omit_delete_route"`
-	OmitSearchRoute     bool `json:"omit_search_route"`
-	OmitBelongsToRoutes bool `json:"omit_belongs_to_routes"`
+	OmitCreateRoute        bool `json:"omit_create_route"`
+	OmitRetrieveRoute      bool `json:"omit_retrieve_route"`
+	OmitUpdateRoute        bool `json:"omit_update_route"`
+	OmitPartialUpdateRoute bool `json:"omit_partial_update_route"`
+	OmitDeleteRoute        bool `json:"omit_delete_route"`
+	OmitSearchRoute        bool `json:"omit_search_route"`
+	OmitBelongsToRoutes    bool `json:"omit_belongs_to_routes"`
 }
 
 type GeneratePrimaryKeyFunc func() any

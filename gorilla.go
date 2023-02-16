@@ -37,6 +37,9 @@ func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *valida
 		if !resources[i].OmitUpdateRoute {
 			r.HandleFunc(name, GorillaHandler(mid, handlers.UpdateHandler(base))).Methods(http.MethodPut)
 		}
+		if !resources[i].OmitPartialUpdateRoute {
+			r.HandleFunc(name, GorillaHandler(mid, handlers.UpdateHandler(base))).Methods(http.MethodPatch)
+		}
 		if !resources[i].OmitDeleteRoute {
 			r.HandleFunc(nameID, GorillaHandler(mid, handlers.DeleteHandler(base))).Methods(http.MethodDelete)
 		}
