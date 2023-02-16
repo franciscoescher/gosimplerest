@@ -17,6 +17,8 @@ It creates the following routes (models are table names of the resources, conver
 - PUT /model
 - PATCH /model
 - DELETE /model/{id}
+- HEAD /model
+- HEAD /model/{id}
   
 Also, for each belongs to relation, it creates the following routes:
 - GET /belongs-to/{id}/model
