@@ -85,7 +85,3 @@ func encodeJsonError(w http.ResponseWriter, msg string) {
 		"error": msg,
 	})
 }
-
-func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
-}
