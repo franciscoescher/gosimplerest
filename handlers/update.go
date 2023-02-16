@@ -12,7 +12,7 @@ import (
 // UpdateHandler returns a handler for the PUT method
 func UpdateHandler(base *resource.Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := unmarschalBody(r)
+		data, err := unmarshalBody(r)
 		if err != nil {
 			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)

@@ -14,7 +14,7 @@ import (
 // CreateHandler returns a handler for the POST method
 func CreateHandler(base *resource.Base) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := unmarschalBody(r)
+		data, err := unmarshalBody(r)
 		if err != nil {
 			base.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -67,8 +67,8 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 	}
 }
 
-// unmarschalBody converts the body of the request to a map of strings and interfaces
-func unmarschalBody(r *http.Request) (map[string]any, error) {
+// unmarshalBody converts the body of the request to a map of strings and interfaces
+func unmarshalBody(r *http.Request) (map[string]any, error) {
 	b := new(bytes.Buffer)
 	_, err := b.ReadFrom(r.Body)
 	if err != nil {
