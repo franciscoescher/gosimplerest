@@ -274,13 +274,6 @@ func castVal(v any) (any, error) {
 		return nil, nil
 	}
 
-	n, ok := v.(int)
-	if ok {
-		logrus.Info("AQUIIII1")
-		logrus.Info(n)
-		return n, nil
-	}
-
 	n3, ok := v.(int64)
 	if ok {
 		logrus.Info("AQUIIII2")
