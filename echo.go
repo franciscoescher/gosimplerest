@@ -45,7 +45,7 @@ func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Val
 		if !resources[i].OmitSearchRoute {
 			r.GET(name, EchoHandler(handlers.SearchHandler(base)))
 		}
-		if !resources[i].OmitHeadRoute {
+		if !resources[i].OmitHeadRoutes {
 			r.HEAD(nameID, EchoHandler(handlers.RetrieveHandler(base)))
 			r.HEAD(name, EchoHandler(handlers.SearchHandler(base)))
 		}

@@ -45,7 +45,7 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 		if !resources[i].OmitSearchRoute {
 			r.Get(name, ChiHandler(handlers.SearchHandler(base)))
 		}
-		if !resources[i].OmitHeadRoute {
+		if !resources[i].OmitHeadRoutes {
 			r.Head(nameID, ChiHandler(handlers.RetrieveHandler(base)))
 			r.Head(name, ChiHandler(handlers.SearchHandler(base)))
 		}

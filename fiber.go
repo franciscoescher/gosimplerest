@@ -46,7 +46,7 @@ func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Va
 		if !resources[i].OmitSearchRoute {
 			r.Get(name, FiberHandler(handlers.SearchHandler(base)))
 		}
-		if !resources[i].OmitHeadRoute {
+		if !resources[i].OmitHeadRoutes {
 			r.Head(nameID, FiberHandler(handlers.RetrieveHandler(base)))
 			r.Head(name, FiberHandler(handlers.SearchHandler(base)))
 		}

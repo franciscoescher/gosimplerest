@@ -45,7 +45,7 @@ func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Val
 		if !resources[i].OmitSearchRoute {
 			r.GET(name, GinHandler(handlers.SearchHandler(base)))
 		}
-		if !resources[i].OmitHeadRoute {
+		if !resources[i].OmitHeadRoutes {
 			r.HEAD(name, GinHandler(handlers.SearchHandler(base)))
 			r.HEAD(nameID, GinHandler(handlers.RetrieveHandler(base)))
 		}
