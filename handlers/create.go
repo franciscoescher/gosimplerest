@@ -63,6 +63,7 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 		}
 
 		result := map[string]any{base.Resource.PrimaryKey: data[base.Resource.PrimaryKey]}
+		w.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
 	}
 }
@@ -82,6 +83,7 @@ func unmarshalBody(r *http.Request) (map[string]any, error) {
 
 // encodeJsonError encodes an error message in json to the response writer
 func encodeJsonError(w http.ResponseWriter, msg string) {
+	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
 		"error": msg,
 	})

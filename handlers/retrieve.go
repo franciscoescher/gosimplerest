@@ -3,8 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"encoding/json"
-
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
@@ -34,8 +32,11 @@ func RetrieveHandler(base *resource.Base) http.HandlerFunc {
 			return
 		}
 
-		if r.Method != http.MethodHead {
-			json.NewEncoder(w).Encode(result)
+		err = encodeJson(w, r, result)
+		if err != nil {
+			base.Logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 	}
 }
