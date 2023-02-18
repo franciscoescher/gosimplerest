@@ -3,7 +3,6 @@ package gosimplerest
 import (
 	"database/sql"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
@@ -11,52 +10,35 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
-	"github.com/stoewer/go-strcase"
 )
 
 func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) *chi.Mux {
-	if v == nil {
-		v = validator.New()
+	h := AddRouteFunctions{
+		Post:   ChiAddRouteFunc(r.Post),
+		Get:    ChiAddRouteFunc(r.Get),
+		Put:    ChiAddRouteFunc(r.Put),
+		Patch:  ChiAddRouteFunc(r.Patch),
+		Delete: ChiAddRouteFunc(r.Delete),
+		Head:   ChiAddRouteFunc(r.Head),
 	}
-	if l == nil {
-		l = logrus.New()
-		l.Out = io.Discard
+	apf := func(name string, param string) string {
+		return fmt.Sprintf("%s/{%s}", name, param)
 	}
-	for i := range resources {
-		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
-		nameID := fmt.Sprintf("%s/{id}", name)
-
-		if !resources[i].OmitCreateRoute {
-			r.Post(name, ChiHandler(handlers.CreateHandler(base)))
-		}
-		if !resources[i].OmitRetrieveRoute {
-			r.Get(nameID, ChiHandler(handlers.RetrieveHandler(base)))
-		}
-		if !resources[i].OmitUpdateRoute {
-			r.Put(name, ChiHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitPartialUpdateRoute {
-			r.Patch(name, ChiHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitDeleteRoute {
-			r.Delete(nameID, ChiHandler(handlers.DeleteHandler(base)))
-		}
-		if !resources[i].OmitSearchRoute {
-			r.Get(name, ChiHandler(handlers.SearchHandler(base)))
-		}
-		if !resources[i].OmitHeadRoutes {
-			r.Head(nameID, ChiHandler(handlers.RetrieveHandler(base)))
-			r.Head(name, ChiHandler(handlers.SearchHandler(base)))
-		}
-	}
+	AddHandlers(d, l, v, h, apf, resources)
 	return r
 }
 
-// ChiHandler wraps the handler function with the given middleware
+// ChiAddRouteFunc uses the f function to add a route to the router,
+// wrapping the handler to add params to request context.
+func ChiAddRouteFunc(f AddRouteFunc) AddRouteFunc {
+	return func(name string, h http.HandlerFunc) {
+		f(name, ChiHandlerWrapper(h))
+	}
+}
+
+// ChiHandlerWrapper wraps the handler function.
 // It adds params to request context.
-// If the middelware function is nil, it returns the handler
-func ChiHandler(h http.HandlerFunc) http.HandlerFunc {
+func ChiHandlerWrapper(h http.HandlerFunc) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		// get params from chi context
 		keys := make([]string, 0)

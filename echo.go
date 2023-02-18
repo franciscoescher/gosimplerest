@@ -3,7 +3,6 @@ package gosimplerest
 import (
 	"database/sql"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
@@ -11,50 +10,39 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stoewer/go-strcase"
 )
 
-func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) {
-	if v == nil {
-		v = validator.New()
+func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) *echo.Echo {
+	h := AddRouteFunctions{
+		Post:   EchoAddRouteFunc(r.POST),
+		Get:    EchoAddRouteFunc(r.GET),
+		Put:    EchoAddRouteFunc(r.PUT),
+		Patch:  EchoAddRouteFunc(r.PATCH),
+		Delete: EchoAddRouteFunc(r.DELETE),
+		Head:   EchoAddRouteFunc(r.HEAD),
 	}
-	if l == nil {
-		l = logrus.New()
-		l.Out = io.Discard
+	apf := func(name string, param string) string {
+		return fmt.Sprintf("%s/{%s}", name, param)
 	}
-	for i := range resources {
-		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
-		nameID := fmt.Sprintf("%s/:id", name)
+	AddHandlers(d, l, v, h, apf, resources)
+	return r
+}
 
-		if !resources[i].OmitCreateRoute {
-			r.POST(name, EchoHandler(handlers.CreateHandler(base)))
-		}
-		if !resources[i].OmitRetrieveRoute {
-			r.GET(nameID, EchoHandler(handlers.RetrieveHandler(base)))
-		}
-		if !resources[i].OmitUpdateRoute {
-			r.PUT(name, EchoHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitPartialUpdateRoute {
-			r.PATCH(name, EchoHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitDeleteRoute {
-			r.DELETE(nameID, EchoHandler(handlers.DeleteHandler(base)))
-		}
-		if !resources[i].OmitSearchRoute {
-			r.GET(name, EchoHandler(handlers.SearchHandler(base)))
-		}
-		if !resources[i].OmitHeadRoutes {
-			r.HEAD(nameID, EchoHandler(handlers.RetrieveHandler(base)))
-			r.HEAD(name, EchoHandler(handlers.SearchHandler(base)))
-		}
+// EchoAddRouteType is the type of the function that echo.Echo uses to add routes to the router.
+// Example: r.POST, r.GET...
+type EchoAddRouteType func(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+
+// EchoAddRouteFunc uses the f function to add a route to the router,
+// wrapping the handler to add params to request context.
+func EchoAddRouteFunc(f EchoAddRouteType) AddRouteFunc {
+	return func(name string, h http.HandlerFunc) {
+		f(name, EchoHandlerWrapper(h))
 	}
 }
 
-// EchoHandler converts a http.HandlerFunc to a echo.HandlerFunc
+// EchoHandlerWrapper converts a http.HandlerFunc to a echo.HandlerFunc
 // It adds params to request context.
-func EchoHandler(h http.HandlerFunc) echo.HandlerFunc {
+func EchoHandlerWrapper(h http.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		params := make(map[string]string, 0)
 

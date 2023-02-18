@@ -3,7 +3,6 @@ package gosimplerest
 import (
 	"database/sql"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
@@ -11,50 +10,39 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
-	"github.com/stoewer/go-strcase"
 )
 
-func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) {
-	if v == nil {
-		v = validator.New()
+func AddGinHandlers(r *gin.Engine, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) *gin.Engine {
+	h := AddRouteFunctions{
+		Post:   GinAddRouteFunc(r.POST),
+		Get:    GinAddRouteFunc(r.GET),
+		Put:    GinAddRouteFunc(r.PUT),
+		Patch:  GinAddRouteFunc(r.PATCH),
+		Delete: GinAddRouteFunc(r.DELETE),
+		Head:   GinAddRouteFunc(r.HEAD),
 	}
-	if l == nil {
-		l = logrus.New()
-		l.Out = io.Discard
+	apf := func(name string, param string) string {
+		return fmt.Sprintf("%s/:%s", name, param)
 	}
-	for i := range resources {
-		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
-		nameID := fmt.Sprintf("%s/:id", name)
+	AddHandlers(d, l, v, h, apf, resources)
+	return r
+}
 
-		if !resources[i].OmitCreateRoute {
-			r.POST(name, GinHandler(handlers.CreateHandler(base)))
-		}
-		if !resources[i].OmitRetrieveRoute {
-			r.GET(nameID, GinHandler(handlers.RetrieveHandler(base)))
-		}
-		if !resources[i].OmitUpdateRoute {
-			r.PUT(name, GinHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitPartialUpdateRoute {
-			r.PATCH(name, GinHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitDeleteRoute {
-			r.DELETE(nameID, GinHandler(handlers.DeleteHandler(base)))
-		}
-		if !resources[i].OmitSearchRoute {
-			r.GET(name, GinHandler(handlers.SearchHandler(base)))
-		}
-		if !resources[i].OmitHeadRoutes {
-			r.HEAD(name, GinHandler(handlers.SearchHandler(base)))
-			r.HEAD(nameID, GinHandler(handlers.RetrieveHandler(base)))
-		}
+// GinAddRouteType is the type of the function that gin.Engine uses to add routes to the router.
+// Example: r.POST, r.GET...
+type GinAddRouteType func(relativePath string, handlers ...gin.HandlerFunc) gin.IRoutes
+
+// GinAddRouteFunc uses the f function to add a route to the router,
+// wrapping the handler to add params to request context.
+func GinAddRouteFunc(f GinAddRouteType) AddRouteFunc {
+	return func(name string, h http.HandlerFunc) {
+		f(name, GinHandlerWrapper(h))
 	}
 }
 
-// GinHandler converts a http.HandlerFunc to a gin.HandlerFunc
+// GinHandlerWrapper converts a http.HandlerFunc to a gin.HandlerFunc
 // It adds params to request context.
-func GinHandler(h http.HandlerFunc) gin.HandlerFunc {
+func GinHandlerWrapper(h http.HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		params := make(map[string]string, 0)
 		for _, param := range c.Params {

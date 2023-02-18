@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 type GinContextKey int
@@ -41,6 +43,8 @@ func ReadParams(r *http.Request, s string) string {
 // AddParamsToHandlerFunc returns a new http.HandlerFunc that adds the given params to the request context
 func AddParamsToHandlerFunc(h http.HandlerFunc, params map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logrus.Info(params)
+		logrus.Info("aqui")
 		r = GetRequestWithParams(r, params)
 		h(w, r)
 	}

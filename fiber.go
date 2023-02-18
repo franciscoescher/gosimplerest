@@ -3,7 +3,6 @@ package gosimplerest
 import (
 	"database/sql"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
@@ -12,50 +11,39 @@ import (
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
-	"github.com/stoewer/go-strcase"
 )
 
-func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) {
-	if v == nil {
-		v = validator.New()
+func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) *fiber.App {
+	h := AddRouteFunctions{
+		Post:   FiberAddRouteFunc(r.Post),
+		Get:    FiberAddRouteFunc(r.Get),
+		Put:    FiberAddRouteFunc(r.Put),
+		Patch:  FiberAddRouteFunc(r.Patch),
+		Delete: FiberAddRouteFunc(r.Delete),
+		Head:   FiberAddRouteFunc(r.Head),
 	}
-	if l == nil {
-		l = logrus.New()
-		l.Out = io.Discard
+	apf := func(name string, param string) string {
+		return fmt.Sprintf("%s/:%s", name, param)
 	}
-	for i := range resources {
-		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
-		nameID := fmt.Sprintf("%s/:id", name)
+	AddHandlers(d, l, v, h, apf, resources)
+	return r
+}
 
-		if !resources[i].OmitCreateRoute {
-			r.Post(name, FiberHandler(handlers.CreateHandler(base)))
-		}
-		if !resources[i].OmitRetrieveRoute {
-			r.Get(nameID, FiberHandler(handlers.RetrieveHandler(base)))
-		}
-		if !resources[i].OmitUpdateRoute {
-			r.Put(name, FiberHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitPartialUpdateRoute {
-			r.Patch(name, FiberHandler(handlers.UpdateHandler(base)))
-		}
-		if !resources[i].OmitDeleteRoute {
-			r.Delete(nameID, FiberHandler(handlers.DeleteHandler(base)))
-		}
-		if !resources[i].OmitSearchRoute {
-			r.Get(name, FiberHandler(handlers.SearchHandler(base)))
-		}
-		if !resources[i].OmitHeadRoutes {
-			r.Head(nameID, FiberHandler(handlers.RetrieveHandler(base)))
-			r.Head(name, FiberHandler(handlers.SearchHandler(base)))
-		}
+// FiberAddRouteType is the type of the function that fiber.App uses to add routes to the router.
+// Example: r.Post, r.Get...
+type FiberAddRouteType func(path string, handlers ...fiber.Handler) fiber.Router
+
+// FiberAddRouteFunc uses the f function to add a route to the router,
+// wrapping the handler to add params to request context.
+func FiberAddRouteFunc(f FiberAddRouteType) AddRouteFunc {
+	return func(name string, h http.HandlerFunc) {
+		f(name, FiberHandlerWrapper(h))
 	}
 }
 
-// FiberHandler converts a http.HandlerFunc to a fiber.Handler
+// FiberHandlerWrapper wraps the handler function to a fiber handler.
 // It adds params to request context.
-func FiberHandler(h http.HandlerFunc) fiber.Handler {
+func FiberHandlerWrapper(h http.HandlerFunc) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		params := make(map[string]string, 0)
 
