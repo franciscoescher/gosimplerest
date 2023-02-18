@@ -18,7 +18,11 @@ func SearchHandler(base *resource.Base) http.HandlerFunc {
 			// validates fields
 			if !base.Resource.IsSearchable(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				encodeJsonError(w, fmt.Sprintf("%s is not searchable", key))
+				err := encodeJsonError(w, r, fmt.Sprintf("%s is not searchable", key))
+				if err != nil {
+					base.Logger.Error(err)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
 				return
 			}
 			// validates values

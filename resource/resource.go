@@ -294,7 +294,10 @@ func (b *Resource) parseRows(rows *sql.Rows) ([]map[string]any, error) {
 		for i := range values {
 			scanArgs[i] = &values[i]
 		}
-		rows.Scan(scanArgs...)
+		err := rows.Scan(scanArgs...)
+		if err != nil {
+			return make([]map[string]any, 0), err
+		}
 		result, err := b.parseRow(values)
 		if err != nil {
 			return results, err

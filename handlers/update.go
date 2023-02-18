@@ -23,7 +23,11 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 		_, ok := data[base.Resource.PrimaryKey]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
-			encodeJsonError(w, "primery key is required")
+			err = encodeJsonError(w, r, "primery key is required")
+			if err != nil {
+				base.Logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -45,7 +49,11 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 			// validates field exists in the model
 			if !base.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				encodeJsonError(w, fmt.Sprintf("%s not in the model", key))
+				err = encodeJsonError(w, r, fmt.Sprintf("%s not in the model", key))
+				if err != nil {
+					base.Logger.Error(err)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
 				return
 			}
 		}
@@ -53,7 +61,11 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 		errs := base.Resource.ValidateInputFields(base.Validate, data)
 		if len(errs) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			encodeJsonError(w, fmt.Sprintf("%s", errs))
+			err = encodeJsonError(w, r, fmt.Sprintf("%s", errs))
+			if err != nil {
+				base.Logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 			return
 		}
 

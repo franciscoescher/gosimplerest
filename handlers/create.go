@@ -40,7 +40,11 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 			// validates field exists in the model
 			if !base.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				encodeJsonError(w, fmt.Sprintf("%s not in the model", key))
+				err = encodeJsonError(w, r, fmt.Sprintf("%s not in the model", key))
+				if err != nil {
+					base.Logger.Error(err)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
 				return
 			}
 		}
@@ -48,7 +52,11 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 		errs := base.Resource.ValidateAllFields(base.Validate, data)
 		if len(errs) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
-			encodeJsonError(w, fmt.Sprintf("%s", errs))
+			err = encodeJsonError(w, r, fmt.Sprintf("%s", errs))
+			if err != nil {
+				base.Logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -62,9 +70,12 @@ func CreateHandler(base *resource.Base) http.HandlerFunc {
 			data[base.Resource.PrimaryKey] = id
 		}
 
-		result := map[string]any{base.Resource.PrimaryKey: data[base.Resource.PrimaryKey]}
-		w.Header().Add("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(result)
+		err = encodeJson(w, r, map[string]any{base.Resource.PrimaryKey: data[base.Resource.PrimaryKey]})
+		if err != nil {
+			base.Logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -82,9 +93,8 @@ func unmarshalBody(r *http.Request) (map[string]any, error) {
 }
 
 // encodeJsonError encodes an error message in json to the response writer
-func encodeJsonError(w http.ResponseWriter, msg string) {
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+func encodeJsonError(w http.ResponseWriter, r *http.Request, msg string) error {
+	return encodeJson(w, r, map[string]any{
 		"error": msg,
 	})
 }
@@ -100,8 +110,8 @@ func encodeJson(w http.ResponseWriter, r *http.Request, data interface{}) error 
 	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("Content-Length", fmt.Sprintf("%d", len(jsonResponnse)))
 	if r.Method != http.MethodHead {
-		w.Write(jsonResponnse)
+		_, err = w.Write(jsonResponnse)
 	}
 
-	return nil
+	return err
 }

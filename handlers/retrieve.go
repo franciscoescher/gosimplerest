@@ -28,7 +28,12 @@ func RetrieveHandler(base *resource.Base) http.HandlerFunc {
 
 		if len(result) == 0 {
 			w.WriteHeader(http.StatusNotFound)
-			encodeJsonError(w, "not found")
+			err = encodeJsonError(w, r, "not found")
+			if err != nil {
+				base.Logger.Error(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 

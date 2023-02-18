@@ -49,8 +49,14 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	testDB = getDB()
-	testDB.Exec(fmt.Sprintf("DELETE FROM %s", testResource.Table))
-	testDB.Exec(fmt.Sprintf("DELETE FROM %s", testBelongsResource.Table))
+	_, err := testDB.Exec(fmt.Sprintf("DELETE FROM %s", testResource.Table))
+	if err != nil {
+		panic(err)
+	}
+	_, err = testDB.Exec(fmt.Sprintf("DELETE FROM %s", testBelongsResource.Table))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func shutdown() {
