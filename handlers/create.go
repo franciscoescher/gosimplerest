@@ -88,3 +88,20 @@ func encodeJsonError(w http.ResponseWriter, msg string) {
 		"error": msg,
 	})
 }
+
+// encodeJson encodes a json to the response writer.
+// if the method is HEAD, it does not write the body, only the headers.
+func encodeJson(w http.ResponseWriter, r *http.Request, data interface{}) error {
+	jsonResponnse, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Content-Length", fmt.Sprintf("%d", len(jsonResponnse)))
+	if r.Method != http.MethodHead {
+		w.Write(jsonResponnse)
+	}
+
+	return nil
+}

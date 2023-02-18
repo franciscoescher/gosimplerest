@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"encoding/json"
-
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/sirupsen/logrus"
 )
@@ -52,19 +50,4 @@ func SearchHandler(base *resource.Base) http.HandlerFunc {
 			return
 		}
 	}
-}
-
-func encodeJson(w http.ResponseWriter, r *http.Request, data interface{}) error {
-	jsonResponnse, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.Header().Add("Content-Length", fmt.Sprintf("%d", len(jsonResponnse)))
-	if r.Method != http.MethodHead {
-		w.Write(jsonResponnse)
-	}
-
-	return nil
 }
