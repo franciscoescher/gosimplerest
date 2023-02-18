@@ -56,4 +56,55 @@ func TestRetrieveHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, string(dataJson), strings.TrimSpace(response.Body.String()))
+
+	// Test head method
+	request, err = http.NewRequest(http.MethodHead, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request = GetRequestWithParams(request, map[string]string{"id": data["uuid"].(string)})
+	response = httptest.NewRecorder()
+	handler = http.HandlerFunc(RetrieveHandler(base))
+	handler.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "", response.Body.String())
+}
+
+func TestRetrieveHandlerBadRequest(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Make the request
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	request, err := http.NewRequest(http.MethodGet, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request = GetRequestWithParams(request, map[string]string{})
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(RetrieveHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+}
+
+func TestRetrieveHandlerNotFound(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Make the request
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	request, err := http.NewRequest(http.MethodGet, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request = GetRequestWithParams(request, map[string]string{"id": "644159a8-0b21-4250-8184-9f06457435c9"})
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(RetrieveHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusNotFound, response.Code)
 }

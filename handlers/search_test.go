@@ -78,11 +78,82 @@ func TestSearchHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, string(dataJson), strings.TrimSpace(response.Body.String()))
+
+	// Test head method
+	request, err = http.NewRequest(http.MethodHead, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q = request.URL.Query()
+	q.Add("first_name", "Fulano Search Test")
+	request.URL.RawQuery = q.Encode()
+	response = httptest.NewRecorder()
+	handler = http.HandlerFunc(SearchHandler(base))
+	handler.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "", response.Body.String())
 }
 
-func insertDBUserTestRow(data map[string]interface{}) error {
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table),
-		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
-	)
-	return err
+func TestSearchHandlerNoContent(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Make the request
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	request, err := http.NewRequest(http.MethodGet, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := request.URL.Query()
+	q.Add("first_name", "ABCDEF")
+	request.URL.RawQuery = q.Encode()
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(SearchHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusNoContent, response.Code)
+}
+
+func TestSearchHandlerBadRequest(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Make the request
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	request, err := http.NewRequest(http.MethodGet, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := request.URL.Query()
+	q.Add("first_name", "A")
+	request.URL.RawQuery = q.Encode()
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(SearchHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+}
+
+func TestSearchHandlerUnsearchable(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Make the request
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	request, err := http.NewRequest(http.MethodGet, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	q := request.URL.Query()
+	q.Add("phone", "+55 (11) 99999-9999")
+	request.URL.RawQuery = q.Encode()
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(SearchHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusBadRequest, response.Code)
 }

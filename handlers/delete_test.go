@@ -58,3 +58,41 @@ func TestDeleteHandler(t *testing.T) {
 	}
 	assert.NotNil(t, dataDB[0])
 }
+
+func TestDeleteHandlerNotFound(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Make the request
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	request, err := http.NewRequest(http.MethodDelete, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request = GetRequestWithParams(request, map[string]string{"id": "1f79de62-97b4-48cd-b89d-18628bf50396"})
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(DeleteHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusNotFound, response.Code)
+}
+
+func TestDeleteHandlerBadRequest(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Make the request
+	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	request, err := http.NewRequest(http.MethodDelete, route, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request = GetRequestWithParams(request, map[string]string{})
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(DeleteHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+}

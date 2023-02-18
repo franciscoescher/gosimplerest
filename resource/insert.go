@@ -3,8 +3,6 @@ package resource
 import (
 	"fmt"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 )
 
 // Insert inserts a new row into the database
@@ -25,8 +23,6 @@ func (b *Resource) Insert(base *Base, data map[string]any) (int64, error) {
 		values[i] = element
 		i++
 	}
-	logrus.Info("AQUIIII")
-	logrus.Info(values)
 
 	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, b.Table, strings.Join(fields, ","), in)
 	result, err := base.DB.Exec(sql, values...)
