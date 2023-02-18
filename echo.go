@@ -22,7 +22,7 @@ func AddEchoHandlers(r *echo.Echo, d *sql.DB, l *logrus.Logger, v *validator.Val
 		Head:   EchoAddRouteFunc(r.HEAD),
 	}
 	apf := func(name string, param string) string {
-		return fmt.Sprintf("%s/{%s}", name, param)
+		return fmt.Sprintf("%s/:%s", name, param)
 	}
 	AddHandlers(d, l, v, h, apf, resources)
 	return r
