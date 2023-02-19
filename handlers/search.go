@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/franciscoescher/gosimplerest/resource"
@@ -18,7 +17,7 @@ func SearchHandler(base *resource.Base) http.HandlerFunc {
 			// validates fields
 			if !base.Resource.IsSearchable(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				err := encodeJsonError(w, r, fmt.Sprintf("%s is not searchable", key))
+				err := encodeJsonError(w, r, key+" is not searchable")
 				if err != nil {
 					base.Logger.Error(err)
 					w.WriteHeader(http.StatusInternalServerError)

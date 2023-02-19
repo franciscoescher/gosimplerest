@@ -83,8 +83,7 @@ func getDB() *sql.DB {
 }
 
 func insertDBUserTestRow(data map[string]interface{}) error {
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table),
-		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
-	)
+	sqlStr := fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table)
+	_, err := testDB.Exec(sqlStr, data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"])
 	return err
 }
