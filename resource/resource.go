@@ -139,10 +139,16 @@ func (b *Resource) FromStruct(s any) error {
 				name = strcase.SnakeCase(field.Name)
 			}
 		}
+		presentOrTrue := func(tag string) bool {
+			val, ok := field.Tag.Lookup(tag)
+			return ok && (val == "" || val == "true")
+		}
 		// get the field struct
 		fields[name] = Field{
 			Validator:    field.Tag.Get("validate"),
-			Unsearchable: field.Tag.Get("unsearchable") == "true"}
+			Immutable:    presentOrTrue("immutable"),
+			Unsearchable: presentOrTrue("unsearchable"),
+		}
 		// get the primary key
 		if field.Tag.Get("pk") == "true" {
 			b.PrimaryKey = name
