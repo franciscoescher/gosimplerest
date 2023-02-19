@@ -1,5 +1,5 @@
 {
-  "table": "users",
+  "name": "users",
   "primary_key": "uuid",
   "fields": {
     "uuid": {"validator": "uuid"},

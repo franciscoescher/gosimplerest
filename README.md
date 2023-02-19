@@ -64,7 +64,7 @@ CREATE TABLE `users` (
 */
 
 var UserResource = gosimplerest.Resource{
-	Table:      "users",
+	Name:      "users",
 	PrimaryKey: "uuid",
 	Fields: map[string]gosimplerest.Field{
 		"uuid":       {},

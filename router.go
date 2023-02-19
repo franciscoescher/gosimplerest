@@ -50,7 +50,7 @@ func AddHandlers(d *sql.DB, l *logrus.Logger, v *validator.Validate, h AddRouteF
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
 		var sb strings.Builder
 		sb.WriteString("/")
-		sb.WriteString(strcase.KebabCase(resources[i].Table))
+		sb.WriteString(strcase.KebabCase(resources[i].Table()))
 		name := sb.String()
 		nameID := apf(name, "id")
 

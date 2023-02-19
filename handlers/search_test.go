@@ -57,7 +57,7 @@ func TestSearchHandler(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -99,7 +99,7 @@ func TestSearchHandlerNoContent(t *testing.T) {
 	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -120,7 +120,7 @@ func TestSearchHandlerBadRequest(t *testing.T) {
 	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -141,7 +141,7 @@ func TestSearchHandlerUnsearchable(t *testing.T) {
 	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)

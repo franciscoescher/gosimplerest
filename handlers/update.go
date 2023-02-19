@@ -31,12 +31,22 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 			return
 		}
 
-		// adds missing fields if method is PUT
-		if r.Method == http.MethodPut {
-			for field := range base.Resource.Fields {
-				if _, ok := data[field]; !ok {
-					data[field] = nil
+		// Checks for immutable fields being updated and adds missing fields if method is PUT
+		for key, field := range base.Resource.Fields {
+			_, ok := data[key]
+			// checks for tentative of updating immutable fields
+			if ok && field.Immutable {
+				w.WriteHeader(http.StatusBadRequest)
+				err = encodeJsonError(w, r, key+" is immutable")
+				if err != nil {
+					base.Logger.Error(err)
+					w.WriteHeader(http.StatusInternalServerError)
 				}
+				return
+			} else if r.Method == http.MethodPut && !ok && !field.Immutable {
+				// if method is PUT and field is not immutable and not present in the request,
+				// adds it to the data for update
+				data[key] = nil
 			}
 		}
 

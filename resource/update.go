@@ -17,7 +17,7 @@ func (b *Resource) Update(base *Base, data map[string]any) (int64, error) {
 	}
 	values = append(values, data[b.PrimaryKey])
 
-	sql := ConcatStr(`UPDATE `, b.Table, ` SET `, strings.Join(fields, "=?,")+"=?", ` WHERE `, b.PrimaryKey, `=?`)
+	sql := ConcatStr(`UPDATE `, b.Table(), ` SET `, strings.Join(fields, "=?,")+"=?", ` WHERE `, b.PrimaryKey, `=?`)
 	result, err := base.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err

@@ -29,7 +29,7 @@ func TestCreateHandlerOK(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPost, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -49,7 +49,7 @@ func TestCreateHandlerOK(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 
 	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table), bodyJson["uuid"])
+		testResource.Table()), bodyJson["uuid"])
 	dataDB := make([]string, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
 	if err != nil {
@@ -78,7 +78,7 @@ func TestCreateHandlerBadRequest(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPost, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)

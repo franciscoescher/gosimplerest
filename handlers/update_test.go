@@ -31,7 +31,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 		"created_at": t1.Add(-time.Hour * 24),
 	}
 
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table),
+	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table()),
 		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
 	)
 	if err != nil {
@@ -50,7 +50,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -63,7 +63,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 
 	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table), data["uuid"])
+		testResource.Table()), data["uuid"])
 	dataDB := make([]string, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
 	if err != nil {
@@ -92,7 +92,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 		"created_at": t1.Add(-time.Hour * 24),
 	}
 
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table),
+	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table()),
 		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
 	)
 	if err != nil {
@@ -110,7 +110,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPut, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -123,7 +123,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 
 	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table), data["uuid"])
+		testResource.Table()), data["uuid"])
 	dataDB := make([]null.String, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
 	if err != nil {
@@ -156,7 +156,7 @@ func TestUpdateNotFound(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -185,7 +185,7 @@ func TestUpdatePutBadRequest(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPut, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -214,7 +214,7 @@ func TestUpdateBadRequest(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -241,8 +241,36 @@ func TestUpdateNoPrimaryKey(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	handler := http.HandlerFunc(UpdateHandler(base))
+	handler.ServeHTTP(response, request)
+
+	// Make assertions
+	assert.Equal(t, http.StatusBadRequest, response.Code)
+}
+
+func TestUpdateImmutable(t *testing.T) {
+	// Prepare the test
+	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+
+	// Prepare the request
+	data := map[string]interface{}{
+		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe6",
+		"created_at": time.Now(),
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Make the request
+	route := "/" + strcase.KebabCase(testResource.Table())
+	request, err := http.NewRequest(http.MethodPut, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
 	}

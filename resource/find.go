@@ -9,7 +9,7 @@ import (
 func (b *Resource) Find(base *Base, id any) (map[string]any, error) {
 	fields := b.GetFieldNames()
 
-	sqlStatement := ConcatStr(`SELECT `, strings.Join(fields, ","), ` FROM `, b.Table, ` WHERE `, b.PrimaryKey, ` = ? LIMIT 1`)
+	sqlStatement := ConcatStr(`SELECT `, strings.Join(fields, ","), ` FROM `, b.Table(), ` WHERE `, b.PrimaryKey, ` = ? LIMIT 1`)
 	response := base.DB.QueryRow(sqlStatement, id)
 
 	values := make([]any, len(b.Fields))

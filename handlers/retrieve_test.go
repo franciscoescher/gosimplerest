@@ -30,7 +30,7 @@ func TestRetrieveHandler(t *testing.T) {
 		"created_at": t1.Add(-time.Hour * 24),
 	}
 
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table),
+	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table()),
 		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
 	)
 	if err != nil {
@@ -38,7 +38,7 @@ func TestRetrieveHandler(t *testing.T) {
 	}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -76,7 +76,7 @@ func TestRetrieveHandlerBadRequest(t *testing.T) {
 	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +95,7 @@ func TestRetrieveHandlerNotFound(t *testing.T) {
 	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
 
 	// Make the request
-	route := "/" + strcase.KebabCase(testResource.Table)
+	route := "/" + strcase.KebabCase(testResource.Table())
 	request, err := http.NewRequest(http.MethodGet, route, nil)
 	if err != nil {
 		t.Fatal(err)

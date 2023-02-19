@@ -27,8 +27,10 @@ type Base struct {
 // gosimplerest.Resource represents a data resource, such as
 // a database table, a file in a storage system, etc.
 type Resource struct {
-	// Table is the name of the table
-	Table string `json:"table"`
+	// Name of the resource
+	Name string `json:"name"`
+	// OverwriteTableName is the name of the table in case it is not the same as the resource name
+	OverwriteTableName null.String `json:"overwrite_table_name"`
 	// Fields is a list of fields in the table
 	Fields map[string]Field `json:"fields"`
 	// PrimaryKey is the name of field that is the primary key
@@ -67,6 +69,8 @@ type Field struct {
 	// Unsearchable is a flag that indicates that a field can not be used
 	// as query parameter in the search route
 	Unsearchable bool `json:"unsearchable"`
+	// Immutable is a flag that indicates that a field can not be updated
+	Immutable bool `json:"immutable"`
 }
 
 // FromJSON reads a JSON file and populates the model
@@ -80,6 +84,14 @@ func (b *Resource) FromJSON(filename string) error {
 		return err
 	}
 	return nil
+}
+
+// Table returns the table name
+func (b *Resource) Table() string {
+	if b.OverwriteTableName.Valid {
+		return b.OverwriteTableName.String
+	}
+	return b.Name
 }
 
 /*
@@ -98,7 +110,7 @@ The struct should have the following tags:
   - unsearchable: used to get the unsearchable fields
   - pk: used to get the primary key
 
-The omit flags and GeneratePrimaryKeyFunc are not populated by this function
+The omit route flags, OverwriteTableName and GeneratePrimaryKeyFunc are not populated by this function
 */
 func (b *Resource) FromStruct(s any) error {
 	// Table name
@@ -106,7 +118,8 @@ func (b *Resource) FromStruct(s any) error {
 	if t.Kind() != reflect.Struct {
 		return fmt.Errorf("not struct type: %s", t.Kind())
 	}
-	b.Table = strcase.SnakeCase(t.Name())
+	b.Name = strcase.SnakeCase(t.Name())
+	b.OverwriteTableName = null.NewString("", false)
 
 	// Fields
 	// iterate over fields

@@ -59,7 +59,7 @@ import (
 )
 
 var UserResource = resource.Resource{
-	Table:      "users",
+	Name:       "users",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
 		"uuid":        {Validator: "uuid4"},
@@ -77,7 +77,7 @@ var UserResource = resource.Resource{
 }
 
 var RentEventResource = resource.Resource{
-	Table:      "rent_events",
+	Name:       "rent_events",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
 		"uuid":          {Validator: "uuid4"},
@@ -98,7 +98,7 @@ var RentEventResource = resource.Resource{
 }
 
 var VehicleResource = resource.Resource{
-	Table:      "vehicles",
+	Name:       "vehicles",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
 		"uuid":           {Validator: "uuid4"},

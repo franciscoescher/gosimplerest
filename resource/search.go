@@ -28,7 +28,7 @@ func (b *Resource) Search(base *Base, query map[string][]string) ([]map[string]a
 	if len(where) > 0 {
 		whereStr = "WHERE " + strings.Join(where, " AND ")
 	}
-	sqlStr := ConcatStr(`SELECT `, strings.Join(fields, ","), ` FROM `, b.Table, ` `, whereStr, ` ORDER BY `, b.PrimaryKey)
+	sqlStr := ConcatStr(`SELECT `, strings.Join(fields, ","), ` FROM `, b.Table(), ` `, whereStr, ` ORDER BY `, b.PrimaryKey)
 	response, err := base.DB.Query(sqlStr, values...)
 	if err != nil {
 		return nil, err

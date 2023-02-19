@@ -14,20 +14,20 @@ import (
 var testDB *sql.DB
 
 var testResource = resource.Resource{
-	Table:      "users_test",
+	Name:       "users_test",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
 		"uuid":       {Validator: "uuid4"},
 		"first_name": {Validator: "required,min=4,max=20"},
 		"phone":      {Unsearchable: true},
-		"created_at": {},
+		"created_at": {Immutable: true},
 		"deleted_at": {},
 	},
 	SoftDeleteField: null.NewString("deleted_at", true),
 }
 
 var testBelongsResource = resource.Resource{
-	Table:      "rent_events_test",
+	Name:       "rent_events_test",
 	PrimaryKey: "uuid",
 	Fields: map[string]resource.Field{
 		"uuid":          {},
@@ -49,11 +49,11 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	testDB = getDB()
-	_, err := testDB.Exec("DELETE FROM " + testResource.Table)
+	_, err := testDB.Exec("DELETE FROM " + testResource.Table())
 	if err != nil {
 		panic(err)
 	}
-	_, err = testDB.Exec("DELETE FROM " + testBelongsResource.Table)
+	_, err = testDB.Exec("DELETE FROM " + testBelongsResource.Table())
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +83,7 @@ func getDB() *sql.DB {
 }
 
 func insertDBUserTestRow(data map[string]interface{}) error {
-	sqlStr := fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table)
+	sqlStr := fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table())
 	_, err := testDB.Exec(sqlStr, data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"])
 	return err
 }
