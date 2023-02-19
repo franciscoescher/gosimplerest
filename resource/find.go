@@ -2,7 +2,6 @@ package resource
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 )
 
@@ -10,8 +9,7 @@ import (
 func (b *Resource) Find(base *Base, id any) (map[string]any, error) {
 	fields := b.GetFieldNames()
 
-	sqlStatement := fmt.Sprintf(`SELECT %s FROM %s WHERE %s = ? LIMIT 1`,
-		strings.Join(fields, ","), b.Table, b.PrimaryKey)
+	sqlStatement := ConcatStr(`SELECT `, strings.Join(fields, ","), ` FROM `, b.Table, ` WHERE `, b.PrimaryKey, ` = ? LIMIT 1`)
 	response := base.DB.QueryRow(sqlStatement, id)
 
 	values := make([]any, len(b.Fields))

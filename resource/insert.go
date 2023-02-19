@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -24,7 +23,7 @@ func (b *Resource) Insert(base *Base, data map[string]any) (int64, error) {
 		i++
 	}
 
-	sql := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, b.Table, strings.Join(fields, ","), in)
+	sql := ConcatStr(`INSERT INTO `, b.Table, ` (`, strings.Join(fields, ","), `) VALUES (`, in, `)`)
 	result, err := base.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err

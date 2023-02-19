@@ -29,7 +29,7 @@ func TestCreateHandlerOK(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPost, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -78,7 +78,7 @@ func TestCreateHandlerBadRequest(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPost, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)

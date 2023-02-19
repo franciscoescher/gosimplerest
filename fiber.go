@@ -2,8 +2,8 @@ package gosimplerest
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
 	"github.com/franciscoescher/gosimplerest/resource"
@@ -23,7 +23,11 @@ func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Va
 		Head:   FiberAddRouteFunc(r.Head),
 	}
 	apf := func(name string, param string) string {
-		return fmt.Sprintf("%s/:%s", name, param)
+		var sb strings.Builder
+		sb.WriteString(name)
+		sb.WriteString("/:")
+		sb.WriteString(param)
+		return sb.String()
 	}
 	AddHandlers(d, l, v, h, apf, resources)
 	return r

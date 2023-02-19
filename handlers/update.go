@@ -49,7 +49,7 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 			// validates field exists in the model
 			if !base.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
-				err = encodeJsonError(w, r, fmt.Sprintf("%s not in the model", key))
+				err = encodeJsonError(w, r, key+" not in the model")
 				if err != nil {
 					base.Logger.Error(err)
 					w.WriteHeader(http.StatusInternalServerError)

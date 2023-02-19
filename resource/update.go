@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -18,7 +17,7 @@ func (b *Resource) Update(base *Base, data map[string]any) (int64, error) {
 	}
 	values = append(values, data[b.PrimaryKey])
 
-	sql := fmt.Sprintf(`UPDATE %s SET %s WHERE %s=?`, b.Table, strings.Join(fields, "=?,")+"=?", b.PrimaryKey)
+	sql := ConcatStr(`UPDATE `, b.Table, ` SET `, strings.Join(fields, "=?,")+"=?", ` WHERE `, b.PrimaryKey, `=?`)
 	result, err := base.DB.Exec(sql, values...)
 	if err != nil {
 		return 0, err

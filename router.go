@@ -2,9 +2,9 @@ package gosimplerest
 
 import (
 	"database/sql"
-	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
 	"github.com/franciscoescher/gosimplerest/resource"
@@ -48,7 +48,10 @@ func AddHandlers(d *sql.DB, l *logrus.Logger, v *validator.Validate, h AddRouteF
 	}
 	for i := range resources {
 		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
-		name := fmt.Sprintf("/%s", strcase.KebabCase(resources[i].Table))
+		var sb strings.Builder
+		sb.WriteString("/")
+		sb.WriteString(strcase.KebabCase(resources[i].Table))
+		name := sb.String()
 		nameID := apf(name, "id")
 
 		if !resources[i].OmitCreateRoute {

@@ -2,8 +2,8 @@ package gosimplerest
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
 	"github.com/franciscoescher/gosimplerest/resource"
@@ -22,7 +22,12 @@ func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Valida
 		Head:   ChiAddRouteFunc(r.Head),
 	}
 	apf := func(name string, param string) string {
-		return fmt.Sprintf("%s/{%s}", name, param)
+		var sb strings.Builder
+		sb.WriteString(name)
+		sb.WriteString("/{")
+		sb.WriteString(param)
+		sb.WriteString("}")
+		return sb.String()
 	}
 	AddHandlers(d, l, v, h, apf, resources)
 	return r

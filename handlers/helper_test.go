@@ -49,11 +49,11 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	testDB = getDB()
-	_, err := testDB.Exec(fmt.Sprintf("DELETE FROM %s", testResource.Table))
+	_, err := testDB.Exec("DELETE FROM " + testResource.Table)
 	if err != nil {
 		panic(err)
 	}
-	_, err = testDB.Exec(fmt.Sprintf("DELETE FROM %s", testBelongsResource.Table))
+	_, err = testDB.Exec("DELETE FROM " + testBelongsResource.Table)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +68,7 @@ func getDB() *sql.DB {
 		User:                 os.Getenv("DB_USER_TEST"),
 		Passwd:               os.Getenv("DB_PASSWORD_TEST"),
 		Net:                  "tcp",
-		Addr:                 fmt.Sprintf("%s:%s", os.Getenv("DB_HOSTNAME_TEST"), os.Getenv("DB_PORT_TEST")),
+		Addr:                 os.Getenv("DB_HOSTNAME_TEST") + ":" + os.Getenv("DB_PORT_TEST"),
 		DBName:               os.Getenv("DB_SCHEMA_TEST"),
 		ParseTime:            true,
 		AllowNativePasswords: true,

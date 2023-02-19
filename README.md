@@ -101,7 +101,7 @@ func getDB() *sql.DB {
 		User:                 os.Getenv("DB_USER"),
 		Passwd:               os.Getenv("DB_PASSWORD"),
 		Net:                  "tcp",
-		Addr:                 fmt.Sprintf("%s:%s", os.Getenv("DB_HOSTNAME"), os.Getenv("DB_PORT")),
+		Addr:                 os.Getenv("DB_HOSTNAME") + ":" + os.Getenv("DB_PORT"),
 		DBName:               os.Getenv("DB_SCHEMA"),
 		ParseTime:            true,
 		AllowNativePasswords: true,

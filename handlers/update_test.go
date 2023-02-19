@@ -50,7 +50,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -110,7 +110,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPut, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -156,7 +156,7 @@ func TestUpdateNotFound(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -185,7 +185,7 @@ func TestUpdatePutBadRequest(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPut, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -214,7 +214,7 @@ func TestUpdateBadRequest(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -241,7 +241,7 @@ func TestUpdateNoPrimaryKey(t *testing.T) {
 	}
 
 	// Make the request
-	route := fmt.Sprintf("/%s", strcase.KebabCase(testResource.Table))
+	route := "/" + strcase.KebabCase(testResource.Table)
 	request, err := http.NewRequest(http.MethodPatch, route, bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
