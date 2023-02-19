@@ -150,22 +150,22 @@ func (b *Resource) FromStruct(s any) error {
 			Unsearchable: presentOrTrue("unsearchable"),
 		}
 		// get the primary key
-		if field.Tag.Get("pk") == "true" {
+		if presentOrTrue("pk") {
 			b.PrimaryKey = name
 		} else if field.Tag.Get("pk") == "autoincremental" {
 			b.PrimaryKey = name
 			b.AutoIncrementalPK = true
 		}
 		// get the soft delete field
-		if field.Tag.Get("soft_delete") == "true" {
+		if presentOrTrue("soft_delete") {
 			b.SoftDeleteField = null.StringFrom(name)
 		}
 		// get the created at field
-		if field.Tag.Get("created_at") == "true" {
+		if presentOrTrue("created_at") {
 			b.CreatedAtField = null.StringFrom(name)
 		}
 		// get the updated at field
-		if field.Tag.Get("updated_at") == "true" {
+		if presentOrTrue("updated_at") {
 			b.UpdatedAtField = null.StringFrom(name)
 		}
 	}
