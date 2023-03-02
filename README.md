@@ -123,14 +123,14 @@ Each resource can be configured with Ommit route flags, which can be used to dis
 The available flags are:
 
 ```
-	// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
-	OmitCreateRoute        bool `json:"omit_create_route"`
-	OmitRetrieveRoute      bool `json:"omit_retrieve_route"`
-	OmitUpdateRoute        bool `json:"omit_update_route"`
-	OmitPartialUpdateRoute bool `json:"omit_partial_update_route"`
-	OmitDeleteRoute        bool `json:"omit_delete_route"`
-	OmitSearchRoute        bool `json:"omit_search_route"`
-	OmitHeadRoutes         bool `json:"omit_head_routes"`
+// Ommmit<Route Type>Route are flags that omit the generation of the specific route from the router
+OmitCreateRoute        bool `json:"omit_create_route"`
+OmitRetrieveRoute      bool `json:"omit_retrieve_route"`
+OmitUpdateRoute        bool `json:"omit_update_route"`
+OmitPartialUpdateRoute bool `json:"omit_partial_update_route"`
+OmitDeleteRoute        bool `json:"omit_delete_route"`
+OmitSearchRoute        bool `json:"omit_search_route"`
+OmitHeadRoutes         bool `json:"omit_head_routes"`
 ```
 
 ## Adding a new router type
