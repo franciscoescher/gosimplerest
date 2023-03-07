@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/go-playground/validator/v10"
+	"github.com/franciscoescher/gosimplerest/interfaces"
 	"github.com/gofrs/uuid"
 	"github.com/stoewer/go-strcase"
 	null "gopkg.in/guregu/null.v3"
@@ -179,7 +179,7 @@ func (b *Resource) IsSearchable(field string) bool {
 }
 
 // ValidateAllFields validates all fields of the model against the given data
-func (b *Resource) ValidateAllFields(v *validator.Validate, data map[string]interface{}) map[string]interface{} {
+func (b *Resource) ValidateAllFields(v interfaces.Validator, data map[string]interface{}) map[string]interface{} {
 	values := make(map[string]interface{}, len(data))
 	rules := make(map[string]interface{}, len(data))
 	for field := range b.Fields {
@@ -194,7 +194,7 @@ func (b *Resource) ValidateAllFields(v *validator.Validate, data map[string]inte
 }
 
 // ValidateInputFields validates the given fields of the model against the given data
-func (b *Resource) ValidateInputFields(v *validator.Validate, data map[string]interface{}) map[string]interface{} {
+func (b *Resource) ValidateInputFields(v interfaces.Validator, data map[string]interface{}) map[string]interface{} {
 	rules := make(map[string]interface{}, len(data))
 	for k := range data {
 		rules[k] = b.Fields[k].Validator
@@ -203,7 +203,7 @@ func (b *Resource) ValidateInputFields(v *validator.Validate, data map[string]in
 }
 
 // ValidateField validates the given field of the model against the given data
-func (b *Resource) ValidateField(v *validator.Validate, field string, value any) error {
+func (b *Resource) ValidateField(v interfaces.Validator, field string, value any) error {
 	vf := b.Fields[field].Validator
 	if vf == "" {
 		return nil

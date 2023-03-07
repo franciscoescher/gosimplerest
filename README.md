@@ -2,7 +2,7 @@
 
 This package provides an out of the box implementation of a rest api router for go, with simple configuration of the resources (tables in the database).
 
-Currently contains implementation using sql as storage and go validator v10 as param validator.
+Currently contains implementation using sql as storage, but this can be expanded build a new repository package.
 
 The api will create endpoints for each resource configuration provided to the Add<Router>Handlers functions.
 
@@ -134,7 +134,7 @@ OmitHeadRoutes         bool `json:"omit_head_routes"`
 
 To add a new router type, create a new file with the type of the router as name and that contains a function with the following signature:
 
-`func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, v *validator.Validate, resources []Resource`
+`func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, v interfaces.Validator, resources []Resource`
 
 This function should call the `AddHandlers` func, passing the AddRouteFunctions and AddParamFunc, which are a struct with functions that will add a route to the router, given a name and a handler (depending on the method), and a function that adds a parameter to a route url, respectively.
 

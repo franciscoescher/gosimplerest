@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
+	"github.com/franciscoescher/gosimplerest/interfaces"
 	"github.com/franciscoescher/gosimplerest/repository"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
@@ -37,8 +38,8 @@ type AddRouteFunctions struct {
 }
 
 type AddHandlersBaseParams struct {
-	Logger      handlers.LoggerInterface
-	Validator   *validator.Validate
+	Logger      interfaces.Logger
+	Validator   interfaces.Validator
 	Resources   []resource.Resource
 	Respository repository.RepositoryInterface
 }
