@@ -2,7 +2,7 @@
 
 This package provides an out of the box implementation of a rest api router for go, with simple configuration of the resources (tables in the database).
 
-Currently contains implementation using sql as storage, logrus as logger and go validator v10 as param validator.
+Currently contains implementation using sql as storage and go validator v10 as param validator.
 
 The api will create endpoints for each resource configuration provided to the Add<Router>Handlers functions.
 
