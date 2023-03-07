@@ -5,11 +5,10 @@ import (
 	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
-	"github.com/franciscoescher/gosimplerest/interfaces"
+	"github.com/franciscoescher/gosimplerest/logger"
 	"github.com/franciscoescher/gosimplerest/repository"
 	"github.com/franciscoescher/gosimplerest/resource"
-	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
+	"github.com/franciscoescher/gosimplerest/validator"
 	"github.com/stoewer/go-strcase"
 )
 
@@ -38,10 +37,10 @@ type AddRouteFunctions struct {
 }
 
 type AddHandlersBaseParams struct {
-	Logger      interfaces.Logger
-	Validator   interfaces.Validator
 	Resources   []resource.Resource
 	Respository repository.RepositoryInterface
+	Validator   validator.Validator
+	Logger      logger.Logger
 }
 
 type AddHandlersParams struct {
@@ -53,10 +52,10 @@ type AddHandlersParams struct {
 // AddHandlers adds the routes to the router
 func AddHandlers(params AddHandlersParams) {
 	if params.Validator == nil {
-		params.Validator = validator.New()
+		params.Validator = &validator.BlankValidator{}
 	}
 	if params.Logger == nil {
-		params.Logger = logrus.New()
+		params.Logger = &logger.BlankLogger{}
 	}
 	for i := range params.Resources {
 		p := &handlers.GetHandlerFuncParams{

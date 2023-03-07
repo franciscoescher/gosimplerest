@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/franciscoescher/gosimplerest/interfaces"
+	"github.com/franciscoescher/gosimplerest/validator"
 	"github.com/gofrs/uuid"
 	"github.com/stoewer/go-strcase"
 	null "gopkg.in/guregu/null.v3"
@@ -52,8 +52,7 @@ type Resource struct {
 type GeneratePrimaryKeyFunc func() any
 
 type Field struct {
-	// Validator is the validation rules for the field, using the
-	// package github.com/go-playground/validator/v10
+	// Validator is the validation rules for the field
 	Validator string `json:"validator"`
 	// Unsearchable is a flag that indicates that a field can not be used
 	// as query parameter in the search route
@@ -179,7 +178,7 @@ func (b *Resource) IsSearchable(field string) bool {
 }
 
 // ValidateAllFields validates all fields of the model against the given data
-func (b *Resource) ValidateAllFields(v interfaces.Validator, data map[string]interface{}) map[string]interface{} {
+func (b *Resource) ValidateAllFields(v validator.Validator, data map[string]interface{}) map[string]interface{} {
 	values := make(map[string]interface{}, len(data))
 	rules := make(map[string]interface{}, len(data))
 	for field := range b.Fields {
@@ -194,7 +193,7 @@ func (b *Resource) ValidateAllFields(v interfaces.Validator, data map[string]int
 }
 
 // ValidateInputFields validates the given fields of the model against the given data
-func (b *Resource) ValidateInputFields(v interfaces.Validator, data map[string]interface{}) map[string]interface{} {
+func (b *Resource) ValidateInputFields(v validator.Validator, data map[string]interface{}) map[string]interface{} {
 	rules := make(map[string]interface{}, len(data))
 	for k := range data {
 		rules[k] = b.Fields[k].Validator
@@ -203,7 +202,7 @@ func (b *Resource) ValidateInputFields(v interfaces.Validator, data map[string]i
 }
 
 // ValidateField validates the given field of the model against the given data
-func (b *Resource) ValidateField(v interfaces.Validator, field string, value any) error {
+func (b *Resource) ValidateField(v validator.Validator, field string, value any) error {
 	vf := b.Fields[field].Validator
 	if vf == "" {
 		return nil
