@@ -1,12 +1,12 @@
 package gosimplerest
 
 import (
-	"database/sql"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
+	"github.com/franciscoescher/gosimplerest/repository"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
@@ -37,44 +37,63 @@ type AddRouteFunctions struct {
 	Head   AddRouteFunc
 }
 
+type AddHandlersBaseParams struct {
+	Logger      *logrus.Logger
+	Validator   *validator.Validate
+	Resources   []resource.Resource
+	Respository repository.RepositoryInterface
+}
+
+type AddHandlersParams struct {
+	AddHandlersBaseParams
+	AddRouteFunctions AddRouteFunctions
+	AddParamFunc      AddParamFunc
+}
+
 // AddHandlers adds the routes to the router
-func AddHandlers(d *sql.DB, l *logrus.Logger, v *validator.Validate, h AddRouteFunctions, apf AddParamFunc, resources []resource.Resource) {
-	if v == nil {
-		v = validator.New()
+func AddHandlers(params AddHandlersParams) {
+	if params.Validator == nil {
+		params.Validator = validator.New()
 	}
-	if l == nil {
-		l = logrus.New()
-		l.Out = io.Discard
+	if params.Logger == nil {
+		params.Logger = logrus.New()
+		params.Logger.Out = io.Discard
 	}
-	for i := range resources {
-		base := &resource.Base{Logger: l, DB: d, Validate: v, Resource: &resources[i]}
+	for i := range params.Resources {
+		p := &handlers.GetHandlerFuncParams{
+			Logger:     params.Logger,
+			Validate:   params.Validator,
+			Resource:   &params.Resources[i],
+			Repository: params.Respository,
+		}
 		var sb strings.Builder
 		sb.WriteString("/")
-		sb.WriteString(strcase.KebabCase(resources[i].Table()))
+		sb.WriteString(strcase.KebabCase(params.Resources[i].Table()))
 		name := sb.String()
-		nameID := apf(name, "id")
+		nameID := params.AddParamFunc(name, "id")
 
-		if !resources[i].OmitCreateRoute {
-			h.Post(name, handlers.CreateHandler(base))
+		h := params.AddRouteFunctions
+		if !params.Resources[i].OmitCreateRoute {
+			h.Post(name, handlers.CreateHandler(p))
 		}
-		if !resources[i].OmitRetrieveRoute {
-			h.Get(nameID, handlers.RetrieveHandler(base))
+		if !params.Resources[i].OmitRetrieveRoute {
+			h.Get(nameID, handlers.RetrieveHandler(p))
 		}
-		if !resources[i].OmitUpdateRoute {
-			h.Put(name, handlers.UpdateHandler(base))
+		if !params.Resources[i].OmitUpdateRoute {
+			h.Put(name, handlers.UpdateHandler(p))
 		}
-		if !resources[i].OmitPartialUpdateRoute {
-			h.Patch(name, handlers.UpdateHandler(base))
+		if !params.Resources[i].OmitPartialUpdateRoute {
+			h.Patch(name, handlers.UpdateHandler(p))
 		}
-		if !resources[i].OmitDeleteRoute {
-			h.Delete(nameID, handlers.DeleteHandler(base))
+		if !params.Resources[i].OmitDeleteRoute {
+			h.Delete(nameID, handlers.DeleteHandler(p))
 		}
-		if !resources[i].OmitSearchRoute {
-			h.Get(name, handlers.SearchHandler(base))
+		if !params.Resources[i].OmitSearchRoute {
+			h.Get(name, handlers.SearchHandler(p))
 		}
-		if !resources[i].OmitHeadRoutes {
-			h.Head(nameID, handlers.RetrieveHandler(base))
-			h.Head(name, handlers.SearchHandler(base))
+		if !params.Resources[i].OmitHeadRoutes {
+			h.Head(nameID, handlers.RetrieveHandler(p))
+			h.Head(name, handlers.SearchHandler(p))
 		}
 	}
 }

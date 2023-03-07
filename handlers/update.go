@@ -5,41 +5,39 @@ import (
 	"net/http"
 
 	"time"
-
-	"github.com/franciscoescher/gosimplerest/resource"
 )
 
 // UpdateHandler returns a handler for the PATCH method
-func UpdateHandler(base *resource.Base) http.HandlerFunc {
+func UpdateHandler(params *GetHandlerFuncParams) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarshalBody(r)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		// primary key is required
-		_, ok := data[base.Resource.PrimaryKey]
+		_, ok := data[params.Resource.PrimaryKey]
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			err = encodeJsonError(w, r, "primery key is required")
 			if err != nil {
-				base.Logger.Error(err)
+				params.Logger.Error(err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 			return
 		}
 
 		// Checks for immutable fields being updated and adds missing fields if method is PUT
-		for key, field := range base.Resource.Fields {
+		for key, field := range params.Resource.Fields {
 			_, ok := data[key]
 			// checks for tentative of updating immutable fields
 			if ok && field.Immutable {
 				w.WriteHeader(http.StatusBadRequest)
 				err = encodeJsonError(w, r, key+" is immutable")
 				if err != nil {
-					base.Logger.Error(err)
+					params.Logger.Error(err)
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 				return
@@ -50,38 +48,38 @@ func UpdateHandler(base *resource.Base) http.HandlerFunc {
 			}
 		}
 
-		if base.Resource.UpdatedAtField.Valid {
-			data[base.Resource.UpdatedAtField.String] = time.Now()
+		if params.Resource.UpdatedAtField.Valid {
+			data[params.Resource.UpdatedAtField.String] = time.Now()
 		}
 
 		// perform data validation
 		for key := range data {
 			// validates field exists in the model
-			if !base.Resource.HasField(key) {
+			if !params.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
 				err = encodeJsonError(w, r, key+" not in the model")
 				if err != nil {
-					base.Logger.Error(err)
+					params.Logger.Error(err)
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 				return
 			}
 		}
 		// validates values
-		errs := base.Resource.ValidateInputFields(base.Validate, data)
+		errs := params.Resource.ValidateInputFields(params.Validate, data)
 		if len(errs) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
 			err = encodeJsonError(w, r, fmt.Sprintf("%s", errs))
 			if err != nil {
-				base.Logger.Error(err)
+				params.Logger.Error(err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 			return
 		}
 
-		affected, err := base.Resource.Update(base, data)
+		affected, err := params.Repository.Update(params.Resource, data)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

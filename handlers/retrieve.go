@@ -2,26 +2,24 @@ package handlers
 
 import (
 	"net/http"
-
-	"github.com/franciscoescher/gosimplerest/resource"
 )
 
 // RetrieveHandler returns a handler for the GET method
-func RetrieveHandler(base *resource.Base) http.HandlerFunc {
+func RetrieveHandler(params *GetHandlerFuncParams) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := ReadParams(r, "id")
 
 		// validates id
-		err := base.Resource.ValidateField(base.Validate, base.Resource.PrimaryKey, id)
+		err := params.Resource.ValidateField(params.Validate, params.Resource.PrimaryKey, id)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		result, err := base.Resource.Find(base, id)
+		result, err := params.Repository.Find(params.Resource, id)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -30,7 +28,7 @@ func RetrieveHandler(base *resource.Base) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err = encodeJsonError(w, r, "not found")
 			if err != nil {
-				base.Logger.Error(err)
+				params.Logger.Error(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -39,7 +37,7 @@ func RetrieveHandler(base *resource.Base) http.HandlerFunc {
 
 		err = encodeJson(w, r, result)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

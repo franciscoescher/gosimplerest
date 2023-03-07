@@ -2,7 +2,7 @@
 
 This package provides an out of the box implementation of a rest api router for go, with simple configuration of the resources (tables in the database).
 
-Currently contains implementation using sql as database, logrus as logger and go validator v10 as param validator.
+Currently contains implementation using sql as storage, logrus as logger and go validator v10 as param validator.
 
 The api will create endpoints for each resource configuration provided to the Add<Router>Handlers functions.
 
@@ -86,12 +86,9 @@ func main() {
 
 	// create routes for rest api
 	r := gin.Default()
-	gosimplerest.AddGinHandlers(
-		r,
-		db,
-		logger,
-		validator.New(),
-		[]gosimplerest.Resource{UserResource})
+	resources := []gosimplerest.Resource{UserResource}
+	params := gosimplerest.AddHandlersBaseParams{Logger: logger, Resources: resources, Respository: mysqlRepo.NewRepository(db)}
+	gosimplerest.AddGinHandlers(r, params)
 
 	logrus.Fatal(r.Run(":3333"))
 }
@@ -140,3 +137,9 @@ To add a new router type, create a new file with the type of the router as name 
 `func Add<name>Handlers(router <new type>, *sql.DB, l *logrus.Logger, v *validator.Validate, resources []Resource`
 
 This function should call the `AddHandlers` func, passing the AddRouteFunctions and AddParamFunc, which are a struct with functions that will add a route to the router, given a name and a handler (depending on the method), and a function that adds a parameter to a route url, respectively.
+
+## Adding a new type of storage
+
+Implement a new repository that implements the `Repository` interface, which is defined in the `./repository/repository.go` file.
+
+Then, pass an instance of the new repository to the `AddHandlers` function, in the `AddHandlersBaseParams` struct.

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/franciscoescher/gosimplerest"
+	mysqlRepo "github.com/franciscoescher/gosimplerest/repository/mysql"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/guregu/null.v3"
@@ -55,12 +56,9 @@ func main() {
 
 	// create routes for rest api
 	r := gin.Default()
-	gosimplerest.AddGinHandlers(
-		r,
-		db,
-		logger,
-		nil,
-		[]resource.Resource{user})
+	resources := []resource.Resource{user}
+	params := gosimplerest.AddHandlersBaseParams{Logger: logger, Resources: resources, Respository: mysqlRepo.NewRepository(db)}
+	gosimplerest.AddGinHandlers(r, params)
 
 	logrus.Fatal(r.Run(":3333"))
 }

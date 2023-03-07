@@ -1,35 +1,34 @@
 package gosimplerest
 
 import (
-	"database/sql"
 	"net/http"
 	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
-	"github.com/franciscoescher/gosimplerest/resource"
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
-	"github.com/sirupsen/logrus"
 )
 
-func AddFiberHandlers(r *fiber.App, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) *fiber.App {
-	h := AddRouteFunctions{
-		Post:   FiberAddRouteFunc(r.Post),
-		Get:    FiberAddRouteFunc(r.Get),
-		Put:    FiberAddRouteFunc(r.Put),
-		Patch:  FiberAddRouteFunc(r.Patch),
-		Delete: FiberAddRouteFunc(r.Delete),
-		Head:   FiberAddRouteFunc(r.Head),
+func AddFiberHandlers(r *fiber.App, base AddHandlersBaseParams) *fiber.App {
+	params := AddHandlersParams{
+		AddHandlersBaseParams: base,
+		AddRouteFunctions: AddRouteFunctions{
+			Post:   FiberAddRouteFunc(r.Post),
+			Get:    FiberAddRouteFunc(r.Get),
+			Put:    FiberAddRouteFunc(r.Put),
+			Patch:  FiberAddRouteFunc(r.Patch),
+			Delete: FiberAddRouteFunc(r.Delete),
+			Head:   FiberAddRouteFunc(r.Head),
+		},
+		AddParamFunc: func(name string, param string) string {
+			var sb strings.Builder
+			sb.WriteString(name)
+			sb.WriteString("/:")
+			sb.WriteString(param)
+			return sb.String()
+		},
 	}
-	apf := func(name string, param string) string {
-		var sb strings.Builder
-		sb.WriteString(name)
-		sb.WriteString("/:")
-		sb.WriteString(param)
-		return sb.String()
-	}
-	AddHandlers(d, l, v, h, apf, resources)
+	AddHandlers(params)
 	return r
 }
 

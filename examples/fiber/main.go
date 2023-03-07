@@ -8,6 +8,7 @@ import (
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
+	mysqlRepo "github.com/franciscoescher/gosimplerest/repository/mysql"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
@@ -30,7 +31,8 @@ func main() {
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	gosimplerest.AddFiberHandlers(r, db, logger, nil, resources)
+	params := gosimplerest.AddHandlersBaseParams{Logger: logger, Resources: resources, Respository: mysqlRepo.NewRepository(db)}
+	gosimplerest.AddFiberHandlers(r, params)
 
 	log.Fatal(r.Listen(":3333"))
 }

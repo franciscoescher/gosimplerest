@@ -1,36 +1,34 @@
 package gosimplerest
 
 import (
-	"database/sql"
 	"net/http"
 	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
-	"github.com/franciscoescher/gosimplerest/resource"
-	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 )
 
-func AddGorillaMuxHandlers(r *mux.Router, d *sql.DB, l *logrus.Logger, v *validator.Validate,
-	resources []resource.Resource, mid func(h http.Handler) http.HandlerFunc) *mux.Router {
-	h := AddRouteFunctions{
-		Post:   GorillaAddRouteFunc(r, mid, http.MethodPost),
-		Get:    GorillaAddRouteFunc(r, mid, http.MethodGet),
-		Put:    GorillaAddRouteFunc(r, mid, http.MethodPut),
-		Patch:  GorillaAddRouteFunc(r, mid, http.MethodPatch),
-		Delete: GorillaAddRouteFunc(r, mid, http.MethodDelete),
-		Head:   GorillaAddRouteFunc(r, mid, http.MethodHead),
+func AddGorillaMuxHandlers(r *mux.Router, base AddHandlersBaseParams, mid func(h http.Handler) http.HandlerFunc) *mux.Router {
+	params := AddHandlersParams{
+		AddHandlersBaseParams: base,
+		AddRouteFunctions: AddRouteFunctions{
+			Post:   GorillaAddRouteFunc(r, mid, http.MethodPost),
+			Get:    GorillaAddRouteFunc(r, mid, http.MethodGet),
+			Put:    GorillaAddRouteFunc(r, mid, http.MethodPut),
+			Patch:  GorillaAddRouteFunc(r, mid, http.MethodPatch),
+			Delete: GorillaAddRouteFunc(r, mid, http.MethodDelete),
+			Head:   GorillaAddRouteFunc(r, mid, http.MethodHead),
+		},
+		AddParamFunc: func(name string, param string) string {
+			var sb strings.Builder
+			sb.WriteString(name)
+			sb.WriteString("/{")
+			sb.WriteString(param)
+			sb.WriteString("}")
+			return sb.String()
+		},
 	}
-	apf := func(name string, param string) string {
-		var sb strings.Builder
-		sb.WriteString(name)
-		sb.WriteString("/{")
-		sb.WriteString(param)
-		sb.WriteString("}")
-		return sb.String()
-	}
-	AddHandlers(d, l, v, h, apf, resources)
+	AddHandlers(params)
 	return r
 }
 

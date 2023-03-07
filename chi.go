@@ -1,35 +1,34 @@
 package gosimplerest
 
 import (
-	"database/sql"
 	"net/http"
 	"strings"
 
 	"github.com/franciscoescher/gosimplerest/handlers"
-	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-chi/chi"
-	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
 )
 
-func AddChiHandlers(r *chi.Mux, d *sql.DB, l *logrus.Logger, v *validator.Validate, resources []resource.Resource) *chi.Mux {
-	h := AddRouteFunctions{
-		Post:   ChiAddRouteFunc(r.Post),
-		Get:    ChiAddRouteFunc(r.Get),
-		Put:    ChiAddRouteFunc(r.Put),
-		Patch:  ChiAddRouteFunc(r.Patch),
-		Delete: ChiAddRouteFunc(r.Delete),
-		Head:   ChiAddRouteFunc(r.Head),
+func AddChiHandlers(r *chi.Mux, base AddHandlersBaseParams) *chi.Mux {
+	params := AddHandlersParams{
+		AddHandlersBaseParams: base,
+		AddRouteFunctions: AddRouteFunctions{
+			Post:   ChiAddRouteFunc(r.Post),
+			Get:    ChiAddRouteFunc(r.Get),
+			Put:    ChiAddRouteFunc(r.Put),
+			Patch:  ChiAddRouteFunc(r.Patch),
+			Delete: ChiAddRouteFunc(r.Delete),
+			Head:   ChiAddRouteFunc(r.Head),
+		},
+		AddParamFunc: func(name string, param string) string {
+			var sb strings.Builder
+			sb.WriteString(name)
+			sb.WriteString("/{")
+			sb.WriteString(param)
+			sb.WriteString("}")
+			return sb.String()
+		},
 	}
-	apf := func(name string, param string) string {
-		var sb strings.Builder
-		sb.WriteString(name)
-		sb.WriteString("/{")
-		sb.WriteString(param)
-		sb.WriteString("}")
-		return sb.String()
-	}
-	AddHandlers(d, l, v, h, apf, resources)
+	AddHandlers(params)
 	return r
 }
 

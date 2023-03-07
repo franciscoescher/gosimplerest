@@ -3,30 +3,29 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/sirupsen/logrus"
 )
 
 // SearchHandler returns a handler for the GET method with query params
-func SearchHandler(base *resource.Base) http.HandlerFunc {
+func SearchHandler(params *GetHandlerFuncParams) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
 
 		// validates that all fields in data are in the model
 		for key := range query {
 			// validates fields
-			if !base.Resource.IsSearchable(key) {
+			if !params.Resource.IsSearchable(key) {
 				w.WriteHeader(http.StatusBadRequest)
 				err := encodeJsonError(w, r, key+" is not searchable")
 				if err != nil {
-					base.Logger.Error(err)
+					params.Logger.Error(err)
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 				return
 			}
 			// validates values
 			for _, v := range query[key] {
-				err := base.Resource.ValidateField(base.Validate, key, v)
+				err := params.Resource.ValidateField(params.Validate, key, v)
 				if err != nil {
 					logrus.Error(err)
 					w.WriteHeader(http.StatusBadRequest)
@@ -35,9 +34,9 @@ func SearchHandler(base *resource.Base) http.HandlerFunc {
 			}
 		}
 
-		result, err := base.Resource.Search(base, query)
+		result, err := params.Repository.Search(params.Resource, query)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -48,7 +47,7 @@ func SearchHandler(base *resource.Base) http.HandlerFunc {
 
 		err = encodeJson(w, r, result)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

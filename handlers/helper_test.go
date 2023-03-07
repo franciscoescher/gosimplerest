@@ -6,12 +6,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/franciscoescher/gosimplerest/repository"
+	mysqlRepo "github.com/franciscoescher/gosimplerest/repository/mysql"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-sql-driver/mysql"
 	null "gopkg.in/guregu/null.v3"
 )
 
 var testDB *sql.DB
+var testRepo repository.RepositoryInterface
 
 var testResource = resource.Resource{
 	Name:       "users_test",
@@ -49,6 +52,7 @@ func TestMain(m *testing.M) {
 
 func setup() {
 	testDB = getDB()
+	testRepo = mysqlRepo.NewRepository(testDB)
 	_, err := testDB.Exec("DELETE FROM " + testResource.Table())
 	if err != nil {
 		panic(err)

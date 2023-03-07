@@ -1,12 +1,14 @@
-package resource
+package mysql
 
 import (
 	"strings"
+
+	"github.com/franciscoescher/gosimplerest/resource"
 )
 
 // Update updates a row in the database
 // data must contain the primary key
-func (b *Resource) Update(base *Base, data map[string]any) (int64, error) {
+func (r Repository) Update(b *resource.Resource, data map[string]any) (int64, error) {
 	fields := make([]string, len(data))
 	values := make([]any, len(data))
 	i := 0
@@ -17,8 +19,8 @@ func (b *Resource) Update(base *Base, data map[string]any) (int64, error) {
 	}
 	values = append(values, data[b.PrimaryKey])
 
-	sql := ConcatStr(`UPDATE `, b.Table(), ` SET `, strings.Join(fields, "=?,")+"=?", ` WHERE `, b.PrimaryKey, `=?`)
-	result, err := base.DB.Exec(sql, values...)
+	sql := concatStr(`UPDATE `, b.Table(), ` SET `, strings.Join(fields, "=?,")+"=?", ` WHERE `, b.PrimaryKey, `=?`)
+	result, err := r.db.Exec(sql, values...)
 	if err != nil {
 		return 0, err
 	}

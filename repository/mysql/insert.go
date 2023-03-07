@@ -1,11 +1,13 @@
-package resource
+package mysql
 
 import (
 	"strings"
+
+	"github.com/franciscoescher/gosimplerest/resource"
 )
 
 // Insert inserts a new row into the database
-func (b *Resource) Insert(base *Base, data map[string]any) (int64, error) {
+func (r Repository) Insert(b *resource.Resource, data map[string]any) (int64, error) {
 	l := len(data)
 	if b.AutoIncrementalPK {
 		l--
@@ -23,8 +25,8 @@ func (b *Resource) Insert(base *Base, data map[string]any) (int64, error) {
 		i++
 	}
 
-	sql := ConcatStr(`INSERT INTO `, b.Table(), ` (`, strings.Join(fields, ","), `) VALUES (`, in, `)`)
-	result, err := base.DB.Exec(sql, values...)
+	sql := concatStr(`INSERT INTO `, b.Table(), ` (`, strings.Join(fields, ","), `) VALUES (`, in, `)`)
+	result, err := r.db.Exec(sql, values...)
 	if err != nil {
 		return 0, err
 	}

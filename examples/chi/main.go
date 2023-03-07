@@ -9,6 +9,7 @@ import (
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
+	mysqlRepo "github.com/franciscoescher/gosimplerest/repository/mysql"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-chi/chi"
 
@@ -30,7 +31,8 @@ func main() {
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	r = gosimplerest.AddChiHandlers(r, db, logger, nil, resources)
+	params := gosimplerest.AddHandlersBaseParams{Logger: logger, Resources: resources, Respository: mysqlRepo.NewRepository(db)}
+	r = gosimplerest.AddChiHandlers(r, params)
 
 	// iterates over routes and logs them
 	err := chi.Walk(r, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {

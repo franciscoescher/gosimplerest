@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
@@ -18,7 +17,7 @@ import (
 
 func TestRetrieveHandler(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
@@ -73,7 +72,7 @@ func TestRetrieveHandler(t *testing.T) {
 
 func TestRetrieveHandlerBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())
@@ -92,7 +91,7 @@ func TestRetrieveHandlerBadRequest(t *testing.T) {
 
 func TestRetrieveHandlerNotFound(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())

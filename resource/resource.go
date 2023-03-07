@@ -1,28 +1,17 @@
 package resource
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
 	"sort"
-	"strconv"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofrs/uuid"
-	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
 	null "gopkg.in/guregu/null.v3"
 )
-
-type Base struct {
-	Logger   *logrus.Logger
-	DB       *sql.DB
-	Resource *Resource
-	Validate *validator.Validate
-}
 
 // gosimplerest.Resource represents a data resource, such as
 // a database table, a file in a storage system, etc.
@@ -250,78 +239,4 @@ func (b *Resource) GetFieldNames() []string {
 	}
 	sort.Strings(fields)
 	return fields
-}
-
-// parseRow parses a row from the database, returning a map with
-// the field names as keys and the values as values
-func (b *Resource) parseRow(values []any) (map[string]any, error) {
-	fields := b.GetFieldNames()
-	result := make(map[string]any, len(b.Fields))
-	for i, v := range values {
-		casted, err := castVal(v)
-		if err != nil {
-			return result, fmt.Errorf("failed on if for type %T of %v", v, v)
-		}
-		result[fields[i]] = casted
-	}
-	return result, nil
-}
-
-// castVal casts the value incomming from the database to a valid type
-func castVal(v any) (any, error) {
-	// if nil, set to nil
-	if v == nil {
-		return nil, nil
-	}
-
-	n3, ok := v.(int64)
-	if ok {
-		logrus.Info(n3)
-		return n3, nil
-	}
-
-	n2, ok := v.(float64)
-	if ok {
-		logrus.Info(n2)
-		return n2, nil
-	}
-
-	// bool or string
-	x, ok := v.([]byte)
-	if ok {
-		if p, ok := strconv.ParseBool(string(x)); ok == nil {
-			return p, nil
-		} else {
-			return string(x), nil
-		}
-	}
-
-	t, ok := v.(time.Time)
-	if ok {
-		return t, nil
-	}
-
-	return nil, fmt.Errorf("failed on if for type %T of %v", v, v)
-}
-
-// parseRows parses a row from the database, returning a map with the field names as keys and the values as values
-func (b *Resource) parseRows(rows *sql.Rows) ([]map[string]any, error) {
-	results := make([]map[string]any, 0)
-	for rows.Next() {
-		values := make([]any, len(b.Fields))
-		scanArgs := make([]any, len(b.Fields))
-		for i := range values {
-			scanArgs[i] = &values[i]
-		}
-		err := rows.Scan(scanArgs...)
-		if err != nil {
-			return make([]map[string]any, 0), err
-		}
-		result, err := b.parseRow(values)
-		if err != nil {
-			return results, err
-		}
-		results = append(results, result)
-	}
-	return results, nil
 }

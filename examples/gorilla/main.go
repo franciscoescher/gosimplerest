@@ -9,6 +9,7 @@ import (
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
+	mysqlRepo "github.com/franciscoescher/gosimplerest/repository/mysql"
 	"github.com/franciscoescher/gosimplerest/resource"
 
 	"github.com/go-sql-driver/mysql"
@@ -29,7 +30,8 @@ func main() {
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	r = gosimplerest.AddGorillaMuxHandlers(r, db, logger, nil, resources, examples.LoggingHandlerFunc)
+	params := gosimplerest.AddHandlersBaseParams{Logger: logger, Resources: resources, Respository: mysqlRepo.NewRepository(db)}
+	r = gosimplerest.AddGorillaMuxHandlers(r, params, examples.LoggingHandlerFunc)
 
 	// iterates over routes and logs them
 	err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {

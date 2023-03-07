@@ -8,6 +8,7 @@ import (
 
 	"github.com/franciscoescher/gosimplerest"
 	"github.com/franciscoescher/gosimplerest/examples"
+	mysqlRepo "github.com/franciscoescher/gosimplerest/repository/mysql"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/labstack/echo/v4"
 
@@ -29,7 +30,8 @@ func main() {
 
 	// create routes for rest api
 	resources := []resource.Resource{examples.UserResource, examples.RentEventResource, examples.VehicleResource}
-	gosimplerest.AddEchoHandlers(r, db, logger, nil, resources)
+	params := gosimplerest.AddHandlersBaseParams{Logger: logger, Resources: resources, Respository: mysqlRepo.NewRepository(db)}
+	gosimplerest.AddEchoHandlers(r, params)
 
 	log.Fatal(r.Start(":3333"))
 }

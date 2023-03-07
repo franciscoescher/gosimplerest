@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
@@ -19,7 +18,7 @@ import (
 
 func TestUpdateHandlerPatchOK(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
@@ -62,7 +61,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 	// Make assertions
 	assert.Equal(t, http.StatusOK, response.Code)
 
-	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
+	sqlResult := testDB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
 		testResource.Table()), data["uuid"])
 	dataDB := make([]string, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
@@ -80,7 +79,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 
 func TestUpdateHandlerPutOK(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
@@ -122,7 +121,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 	// Make assertions
 	assert.Equal(t, http.StatusOK, response.Code)
 
-	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
+	sqlResult := testDB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
 		testResource.Table()), data["uuid"])
 	dataDB := make([]null.String, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
@@ -142,7 +141,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 
 func TestUpdateNotFound(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -172,7 +171,7 @@ func TestUpdateNotFound(t *testing.T) {
 // Validates if all fields are validated for put (not only the ones present in the request)
 func TestUpdatePutBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -200,7 +199,7 @@ func TestUpdatePutBadRequest(t *testing.T) {
 
 func TestUpdateBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -229,7 +228,7 @@ func TestUpdateBadRequest(t *testing.T) {
 
 func TestUpdateNoPrimaryKey(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -256,7 +255,7 @@ func TestUpdateNoPrimaryKey(t *testing.T) {
 
 func TestUpdateImmutable(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{

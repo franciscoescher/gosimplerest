@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
@@ -16,7 +15,7 @@ import (
 
 func TestDeleteHandler(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
@@ -49,7 +48,7 @@ func TestDeleteHandler(t *testing.T) {
 	// Make assertions
 	assert.Equal(t, http.StatusOK, response.Code)
 
-	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT deleted_at FROM %s WHERE uuid = ? LIMIT 1`,
+	sqlResult := testDB.QueryRow(fmt.Sprintf(`SELECT deleted_at FROM %s WHERE uuid = ? LIMIT 1`,
 		testResource.Table()), data["uuid"])
 	dataDB := make([]string, 1)
 	err = sqlResult.Scan(&dataDB[0])
@@ -61,7 +60,7 @@ func TestDeleteHandler(t *testing.T) {
 
 func TestDeleteHandlerNotFound(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())
@@ -80,7 +79,7 @@ func TestDeleteHandlerNotFound(t *testing.T) {
 
 func TestDeleteHandlerBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())

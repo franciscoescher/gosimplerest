@@ -1,16 +1,18 @@
-package resource
+package mysql
 
 import (
 	"database/sql"
 	"strings"
+
+	"github.com/franciscoescher/gosimplerest/resource"
 )
 
 // Find returns a single row from the database, search by the primary key
-func (b *Resource) Find(base *Base, id any) (map[string]any, error) {
+func (r Repository) Find(b *resource.Resource, id any) (map[string]any, error) {
 	fields := b.GetFieldNames()
 
-	sqlStatement := ConcatStr(`SELECT `, strings.Join(fields, ","), ` FROM `, b.Table(), ` WHERE `, b.PrimaryKey, ` = ? LIMIT 1`)
-	response := base.DB.QueryRow(sqlStatement, id)
+	sqlStatement := concatStr(`SELECT `, strings.Join(fields, ","), ` FROM `, b.Table(), ` WHERE `, b.PrimaryKey, ` = ? LIMIT 1`)
+	response := r.db.QueryRow(sqlStatement, id)
 
 	values := make([]any, len(b.Fields))
 	scanArgs := make([]any, len(b.Fields))
@@ -26,5 +28,5 @@ func (b *Resource) Find(base *Base, id any) (map[string]any, error) {
 		return make(map[string]any, 0), err
 	}
 
-	return b.parseRow(values)
+	return r.parseRow(b, values)
 }

@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
@@ -17,7 +16,7 @@ import (
 
 func TestCreateHandlerOK(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	params := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	var data = map[string]interface{}{
 		"first_name": "Fulano",
@@ -35,7 +34,7 @@ func TestCreateHandlerOK(t *testing.T) {
 		t.Fatal(err)
 	}
 	response := httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateHandler(base))
+	handler := http.HandlerFunc(CreateHandler(params))
 	handler.ServeHTTP(response, request)
 
 	// Make assertions
@@ -48,7 +47,7 @@ func TestCreateHandlerOK(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, response.Code)
 
-	sqlResult := base.DB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
+	sqlResult := testDB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
 		testResource.Table()), bodyJson["uuid"])
 	dataDB := make([]string, 3)
 	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
@@ -66,7 +65,7 @@ func TestCreateHandlerOK(t *testing.T) {
 
 func TestCreateHandlerBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &resource.Base{Resource: &testResource, Logger: logrus.New(), DB: testDB, Validate: validator.New()}
+	params := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
 
 	var data = map[string]interface{}{
 		"first_name": "",
@@ -84,7 +83,7 @@ func TestCreateHandlerBadRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	response := httptest.NewRecorder()
-	handler := http.HandlerFunc(CreateHandler(base))
+	handler := http.HandlerFunc(CreateHandler(params))
 	handler.ServeHTTP(response, request)
 
 	assert.Equal(t, http.StatusBadRequest, response.Code)

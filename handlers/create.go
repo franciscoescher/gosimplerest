@@ -7,72 +7,70 @@ import (
 
 	"encoding/json"
 	"time"
-
-	"github.com/franciscoescher/gosimplerest/resource"
 )
 
 // CreateHandler returns a handler for the POST method
-func CreateHandler(base *resource.Base) http.HandlerFunc {
+func CreateHandler(params *GetHandlerFuncParams) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := unmarshalBody(r)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		if !base.Resource.AutoIncrementalPK {
-			pk := base.Resource.GeneratePrimaryKey()
-			data[base.Resource.PrimaryKey] = pk
+		if !params.Resource.AutoIncrementalPK {
+			pk := params.Resource.GeneratePrimaryKey()
+			data[params.Resource.PrimaryKey] = pk
 		}
-		if base.Resource.CreatedAtField.Valid {
-			data[base.Resource.CreatedAtField.String] = time.Now()
+		if params.Resource.CreatedAtField.Valid {
+			data[params.Resource.CreatedAtField.String] = time.Now()
 		}
-		if base.Resource.UpdatedAtField.Valid {
-			data[base.Resource.UpdatedAtField.String] = time.Now()
+		if params.Resource.UpdatedAtField.Valid {
+			data[params.Resource.UpdatedAtField.String] = time.Now()
 		}
-		if base.Resource.SoftDeleteField.Valid {
-			data[base.Resource.SoftDeleteField.String] = nil
+		if params.Resource.SoftDeleteField.Valid {
+			data[params.Resource.SoftDeleteField.String] = nil
 		}
 
 		// perform data validation
 		for key := range data {
 			// validates field exists in the model
-			if !base.Resource.HasField(key) {
+			if !params.Resource.HasField(key) {
 				w.WriteHeader(http.StatusBadRequest)
 				err = encodeJsonError(w, r, key+" not in the model")
 				if err != nil {
-					base.Logger.Error(err)
+					params.Logger.Error(err)
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 				return
 			}
 		}
 		// validates values
-		errs := base.Resource.ValidateAllFields(base.Validate, data)
+		errs := params.Resource.ValidateAllFields(params.Validate, data)
 		if len(errs) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
 			err = encodeJsonError(w, r, fmt.Sprintf("%s", errs))
 			if err != nil {
-				base.Logger.Error(err)
+				params.Logger.Error(err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 			return
 		}
 
-		id, err := base.Resource.Insert(base, data)
+		id, err := params.Repository.Insert(params.Resource, data)
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		if base.Resource.AutoIncrementalPK {
-			data[base.Resource.PrimaryKey] = id
+		if params.Resource.AutoIncrementalPK {
+			data[params.Resource.PrimaryKey] = id
 		}
 
-		err = encodeJson(w, r, map[string]any{base.Resource.PrimaryKey: data[base.Resource.PrimaryKey]})
+		err = encodeJson(w, r, map[string]any{params.Resource.PrimaryKey: data[params.Resource.PrimaryKey]})
 		if err != nil {
-			base.Logger.Error(err)
+			params.Logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
