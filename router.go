@@ -1,7 +1,6 @@
 package gosimplerest
 
 import (
-	"io"
 	"net/http"
 	"strings"
 
@@ -38,7 +37,7 @@ type AddRouteFunctions struct {
 }
 
 type AddHandlersBaseParams struct {
-	Logger      *logrus.Logger
+	Logger      handlers.LoggerInterface
 	Validator   *validator.Validate
 	Resources   []resource.Resource
 	Respository repository.RepositoryInterface
@@ -57,7 +56,6 @@ func AddHandlers(params AddHandlersParams) {
 	}
 	if params.Logger == nil {
 		params.Logger = logrus.New()
-		params.Logger.Out = io.Discard
 	}
 	for i := range params.Resources {
 		p := &handlers.GetHandlerFuncParams{

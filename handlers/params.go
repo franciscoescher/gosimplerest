@@ -4,12 +4,16 @@ import (
 	"github.com/franciscoescher/gosimplerest/repository"
 	"github.com/franciscoescher/gosimplerest/resource"
 	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
 )
 
+type LoggerInterface interface {
+	Info(args ...interface{})
+	Error(args ...interface{})
+}
+
 type GetHandlerFuncParams struct {
-	Logger     *logrus.Logger
 	Resource   *resource.Resource
 	Validate   *validator.Validate
+	Logger     LoggerInterface
 	Repository repository.RepositoryInterface
 }
