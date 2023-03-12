@@ -3,11 +3,11 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/franciscoescher/gosimplerest/repository/local"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
@@ -16,12 +16,18 @@ import (
 
 func TestCreateHandlerOK(t *testing.T) {
 	// Prepare the test
-	params := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
-
 	var data = map[string]interface{}{
 		"first_name": "Fulano",
 		"phone":      "+55 (11) 99999-9999",
 	}
+
+	params := &GetHandlerFuncParams{
+		Resource:   &testResource,
+		Logger:     logrus.New(),
+		Validate:   validator.New(),
+		Repository: local.NewRepository(),
+	}
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		t.Fatal(err)
@@ -47,20 +53,14 @@ func TestCreateHandlerOK(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, response.Code)
 
-	sqlResult := testDB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table()), bodyJson["uuid"])
-	dataDB := make([]string, 3)
-	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
-	if err != nil {
-		t.Fatal(err)
-	}
-	var dataMapDB = map[string]interface{}{
-		"uuid":       dataDB[0],
-		"first_name": dataDB[1],
-		"phone":      dataDB[2],
+	dataInDB, _ := params.Repository.Find(params.Resource, bodyJson["uuid"])
+	dataOnlyInsertedFields := map[string]interface{}{
+		"first_name": dataInDB["first_name"],
+		"phone":      dataInDB["phone"],
+		"uuid":       dataInDB["uuid"],
 	}
 
-	assert.Equal(t, data, dataMapDB)
+	assert.Equal(t, data, dataOnlyInsertedFields)
 }
 
 func TestCreateHandlerBadRequest(t *testing.T) {

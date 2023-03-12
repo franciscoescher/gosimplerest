@@ -23,7 +23,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
 	var data = map[string]interface{}{
-		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe3",
+		"uuid":       "683143f8-e262-409c-b0a7-3df3ef296e2b",
 		"first_name": "Fulano",
 		"phone":      "+55 (11) 99999-9999",
 		"deleted_at": t1,
@@ -39,7 +39,7 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 
 	// Prepare the request
 	data = map[string]interface{}{
-		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe3",
+		"uuid":       data["uuid"],
 		"first_name": "John",
 		"phone":      "+55 (11) 99999-9999",
 	}
@@ -84,7 +84,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
 	var data = map[string]interface{}{
-		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe2",
+		"uuid":       "bec64968-663e-4e9e-9598-f3c139106bc4",
 		"first_name": "Fulano",
 		"phone":      "+55 (11) 99999-9999",
 		"deleted_at": t1,
@@ -100,7 +100,7 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 
 	// Prepare the request
 	data = map[string]interface{}{
-		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe2",
+		"uuid":       data["uuid"],
 		"first_name": "John",
 	}
 	jsonData, err := json.Marshal(data)
@@ -145,7 +145,7 @@ func TestUpdateNotFound(t *testing.T) {
 
 	// Prepare the request
 	data := map[string]interface{}{
-		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe4",
+		"uuid":       "cec5c034-533a-4b97-8b86-6620bffb4242",
 		"first_name": "John",
 		"phone":      "+55 (11) 99999-9999",
 	}
@@ -175,7 +175,7 @@ func TestUpdatePutBadRequest(t *testing.T) {
 
 	// Prepare the request
 	data := map[string]interface{}{
-		"uuid":  "df51f94b-9061-4b07-9a23-c1d493804fe4",
+		"uuid":  "1421b0f0-9b75-4220-b211-5356c93a8147",
 		"phone": "+55 (11) 99999-9999",
 	}
 	jsonData, err := json.Marshal(data)
@@ -203,7 +203,7 @@ func TestUpdateBadRequest(t *testing.T) {
 
 	// Prepare the request
 	data := map[string]interface{}{
-		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe4",
+		"uuid":       "78a63434-6e69-4a64-9138-01462f1c9721",
 		"first_name": "A",
 		"phone":      "+55 (11) 99999-9999",
 	}
@@ -259,7 +259,7 @@ func TestUpdateImmutable(t *testing.T) {
 
 	// Prepare the request
 	data := map[string]interface{}{
-		"uuid":       "df51f94b-9061-4b07-9a23-c1d493804fe6",
+		"uuid":       "c660dfe1-0c4e-4c8a-b263-9c9cd79f3550",
 		"created_at": time.Now(),
 	}
 	jsonData, err := json.Marshal(data)

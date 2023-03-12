@@ -1,8 +1,6 @@
 package local
 
 import (
-	"database/sql"
-
 	"github.com/franciscoescher/gosimplerest/repository"
 )
 
@@ -18,8 +16,15 @@ type Repository struct {
 }
 
 // NewRepository returns a new local Repository
-func NewRepository(db *sql.DB) Repository {
-	return Repository{}
+func NewRepository() Repository {
+	return Repository{data: make(map[any]map[string]any, 0)}
+}
+
+// NewRepository returns a new local Repository
+func NewRepositoryWithData(data map[any]map[string]any) Repository {
+	return Repository{
+		data: data,
+	}
 }
 
 // Compile-time check that Repository implements the Repository interface
