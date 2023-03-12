@@ -65,7 +65,7 @@ func TestCreateHandlerOK(t *testing.T) {
 
 func TestCreateHandlerBadRequest(t *testing.T) {
 	// Prepare the test
-	params := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	params := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	var data = map[string]interface{}{
 		"first_name": "",

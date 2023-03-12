@@ -66,8 +66,6 @@ func UpdateHandler(params *GetHandlerFuncParams) http.HandlerFunc {
 			}
 		}
 		// validates values
-		fmt.Println("AQUIIIIIIIIIIIIIIIIIIIIIIIIIIII")
-		fmt.Println(data)
 		errs := params.Resource.ValidateInputFields(params.Validate, data)
 		if len(errs) > 0 {
 			w.WriteHeader(http.StatusBadRequest)
@@ -78,7 +76,6 @@ func UpdateHandler(params *GetHandlerFuncParams) http.HandlerFunc {
 			}
 			return
 		}
-		fmt.Println("AQUIIIIIIIIIIIIIIIIIIIIIIIIIIII2222")
 
 		affected, err := params.Repository.Update(params.Resource, data)
 		if err != nil {

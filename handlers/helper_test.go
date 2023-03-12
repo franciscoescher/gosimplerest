@@ -1,20 +1,12 @@
 package handlers
 
 import (
-	"database/sql"
-	"fmt"
 	"os"
 	"testing"
 
-	"github.com/franciscoescher/gosimplerest/repository"
-	mysqlRepo "github.com/franciscoescher/gosimplerest/repository/mysql"
 	"github.com/franciscoescher/gosimplerest/resource"
-	"github.com/go-sql-driver/mysql"
 	null "gopkg.in/guregu/null.v3"
 )
-
-var testDB *sql.DB
-var testRepo repository.RepositoryInterface
 
 var testResource = resource.Resource{
 	Name:       "users_test",
@@ -29,65 +21,7 @@ var testResource = resource.Resource{
 	SoftDeleteField: null.NewString("deleted_at", true),
 }
 
-var testBelongsResource = resource.Resource{
-	Name:       "rent_events_test",
-	PrimaryKey: "uuid",
-	Fields: map[string]resource.Field{
-		"uuid":          {},
-		"user_id":       {},
-		"starting_time": {},
-		"hours":         {},
-		"created_at":    {},
-		"deleted_at":    {},
-	},
-	SoftDeleteField: null.NewString("deleted_at", true),
-}
-
 func TestMain(m *testing.M) {
-	setup()
 	code := m.Run()
-	shutdown()
 	os.Exit(code)
-}
-
-func setup() {
-	testDB = getDB()
-	testRepo = mysqlRepo.NewRepository(testDB)
-	_, err := testDB.Exec("DELETE FROM " + testResource.Table())
-	if err != nil {
-		panic(err)
-	}
-	_, err = testDB.Exec("DELETE FROM " + testBelongsResource.Table())
-	if err != nil {
-		panic(err)
-	}
-}
-
-func shutdown() {
-	testDB.Close()
-}
-
-func getDB() *sql.DB {
-	c := mysql.Config{
-		User:                 os.Getenv("DB_USER_TEST"),
-		Passwd:               os.Getenv("DB_PASSWORD_TEST"),
-		Net:                  "tcp",
-		Addr:                 os.Getenv("DB_HOSTNAME_TEST") + ":" + os.Getenv("DB_PORT_TEST"),
-		DBName:               os.Getenv("DB_SCHEMA_TEST"),
-		ParseTime:            true,
-		AllowNativePasswords: true,
-	}
-
-	db, err := sql.Open("mysql", c.FormatDSN())
-	if err != nil {
-		panic(err)
-	}
-
-	return db
-}
-
-func insertDBUserTestRow(data map[string]interface{}) error {
-	sqlStr := fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table())
-	_, err := testDB.Exec(sqlStr, data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"])
-	return err
 }

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/franciscoescher/gosimplerest/repository/local"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
@@ -16,7 +17,7 @@ import (
 
 func TestSearchHandler(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
@@ -41,19 +42,9 @@ func TestSearchHandler(t *testing.T) {
 		"deleted_at": t1.Add(-time.Hour * 80),
 		"created_at": t1.Add(-time.Hour * 90),
 	}
-
-	err := insertDBUserTestRow(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = insertDBUserTestRow(data2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = insertDBUserTestRow(data3)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, _ = base.Repository.Insert(&testResource, data)
+	_, _ = base.Repository.Insert(&testResource, data2)
+	_, _ = base.Repository.Insert(&testResource, data3)
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())
@@ -95,7 +86,7 @@ func TestSearchHandler(t *testing.T) {
 
 func TestSearchHandlerNoContent(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())
@@ -116,7 +107,7 @@ func TestSearchHandlerNoContent(t *testing.T) {
 
 func TestSearchHandlerBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())
@@ -137,7 +128,7 @@ func TestSearchHandlerBadRequest(t *testing.T) {
 
 func TestSearchHandlerUnsearchable(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())

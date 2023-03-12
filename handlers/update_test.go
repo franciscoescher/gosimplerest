@@ -3,22 +3,21 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/franciscoescher/gosimplerest/repository/local"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/stoewer/go-strcase"
 	"github.com/stretchr/testify/assert"
-	null "gopkg.in/guregu/null.v3"
 )
 
 func TestUpdateHandlerPatchOK(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
@@ -29,21 +28,15 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 		"deleted_at": t1,
 		"created_at": t1.Add(-time.Hour * 24),
 	}
-
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table()),
-		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, _ = base.Repository.Insert(&testResource, data)
 
 	// Prepare the request
-	data = map[string]interface{}{
+	dataUpdate := map[string]interface{}{
 		"uuid":       data["uuid"],
 		"first_name": "John",
 		"phone":      "+55 (11) 99999-9999",
 	}
-	jsonData, err := json.Marshal(data)
+	jsonData, err := json.Marshal(dataUpdate)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,25 +54,16 @@ func TestUpdateHandlerPatchOK(t *testing.T) {
 	// Make assertions
 	assert.Equal(t, http.StatusOK, response.Code)
 
-	sqlResult := testDB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table()), data["uuid"])
-	dataDB := make([]string, 3)
-	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
-	if err != nil {
-		t.Fatal(err)
-	}
-	var dataMapDB = map[string]interface{}{
-		"uuid":       dataDB[0],
-		"first_name": dataDB[1],
-		"phone":      dataDB[2],
-	}
+	data["first_name"] = dataUpdate["first_name"]
+	data["phone"] = dataUpdate["phone"]
+	dataDB, _ := base.Repository.Find(&testResource, data["uuid"])
 
-	assert.Equal(t, data, dataMapDB)
+	assert.Equal(t, data, dataDB)
 }
 
 func TestUpdateHandlerPutOK(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	t1 := time.Now()
 	t1 = time.Date(t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), 0, time.UTC)
@@ -90,20 +74,14 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 		"deleted_at": t1,
 		"created_at": t1.Add(-time.Hour * 24),
 	}
-
-	_, err := testDB.Exec(fmt.Sprintf("INSERT INTO %s (uuid, first_name, phone, created_at, deleted_at) VALUES (?,?,?,?,?)", testResource.Table()),
-		data["uuid"], data["first_name"], data["phone"], data["created_at"], data["deleted_at"],
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, _ = base.Repository.Insert(&testResource, data)
 
 	// Prepare the request
-	data = map[string]interface{}{
+	dataUpdate := map[string]interface{}{
 		"uuid":       data["uuid"],
 		"first_name": "John",
 	}
-	jsonData, err := json.Marshal(data)
+	jsonData, err := json.Marshal(dataUpdate)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,27 +99,20 @@ func TestUpdateHandlerPutOK(t *testing.T) {
 	// Make assertions
 	assert.Equal(t, http.StatusOK, response.Code)
 
-	sqlResult := testDB.QueryRow(fmt.Sprintf(`SELECT uuid, first_name, phone FROM %s WHERE uuid = ? LIMIT 1`,
-		testResource.Table()), data["uuid"])
-	dataDB := make([]null.String, 3)
-	err = sqlResult.Scan(&dataDB[0], &dataDB[1], &dataDB[2])
-	if err != nil {
-		t.Fatal(err)
-	}
-	var dataMapDB = map[string]interface{}{
-		"uuid":       dataDB[0].String,
-		"first_name": dataDB[1].String,
-	}
+	data["first_name"] = dataUpdate["first_name"]
+	data["phone"] = dataUpdate["phone"]
+	dataDB, _ := base.Repository.Find(&testResource, data["uuid"])
 
-	assert.Equal(t, data, dataMapDB)
+	assert.Equal(t, dataUpdate["first_name"], dataDB["first_name"])
+	assert.Equal(t, dataUpdate["phone"], dataDB["phone"])
 
 	// value of phone should be null
-	assert.False(t, dataDB[2].Valid)
+	assert.Nil(t, dataDB["phone"])
 }
 
 func TestUpdateNotFound(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -171,7 +142,7 @@ func TestUpdateNotFound(t *testing.T) {
 // Validates if all fields are validated for put (not only the ones present in the request)
 func TestUpdatePutBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -199,7 +170,7 @@ func TestUpdatePutBadRequest(t *testing.T) {
 
 func TestUpdateBadRequest(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -228,7 +199,7 @@ func TestUpdateBadRequest(t *testing.T) {
 
 func TestUpdateNoPrimaryKey(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{
@@ -255,7 +226,7 @@ func TestUpdateNoPrimaryKey(t *testing.T) {
 
 func TestUpdateImmutable(t *testing.T) {
 	// Prepare the test
-	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: testRepo, Validate: validator.New()}
+	base := &GetHandlerFuncParams{Resource: &testResource, Logger: logrus.New(), Repository: local.NewRepository(), Validate: validator.New()}
 
 	// Prepare the request
 	data := map[string]interface{}{

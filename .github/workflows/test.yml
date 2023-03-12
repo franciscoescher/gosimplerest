@@ -63,34 +63,5 @@ jobs:
           # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
           # skip-build-cache: true
 
-      - name: Prepares database
-        uses: shogo82148/actions-setup-mysql@v1
-        with:
-          mysql-version: '8.0'
-      - run: >
-          mysql -uroot -h127.0.0.1 << "EOF"
-            CREATE DATABASE IF NOT EXISTS test_database;
-            USE test_database;
-            DROP TABLE IF EXISTS `users`;
-            CREATE TABLE `users_test` (
-              `uuid` varchar(191) NOT NULL,
-              `created_at` datetime(3) DEFAULT NULL,
-              `deleted_at` datetime(3) DEFAULT NULL,
-              `first_name` varchar(255) DEFAULT NULL,
-              `phone` varchar(255) DEFAULT NULL,
-              PRIMARY KEY (`uuid`)
-            );
-            CREATE TABLE `rent_events_test` (
-              `uuid` varchar(191) NOT NULL,
-              `created_at` datetime(3) DEFAULT NULL,
-              `deleted_at` datetime(3) DEFAULT NULL,
-              `user_id` varchar(128) DEFAULT NULL,
-              `starting_time` datetime(3) DEFAULT NULL,
-              `hours` int DEFAULT NULL,
-              PRIMARY KEY (`uuid`),
-              KEY `fk_rent_events_test_user` (`user_id`),
-              CONSTRAINT `fk_rent_events_test_user` FOREIGN KEY (`user_id`) REFERENCES `users_test` (`uuid`) ON DELETE CASCADE
-            );
-
       - name: Run tests
-        run: DB_USER_TEST=root DB_HOSTNAME_TEST=127.0.0.1 DB_PORT_TEST=3306 DB_SCHEMA_TEST=test_database go test ./... -cover
+        run: go test ./... -cover
