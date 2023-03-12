@@ -6,8 +6,6 @@ import (
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
-// Update updates a row in the database
-// data must contain the primary key
 func (r Repository) Update(b *resource.Resource, data map[string]any) (int64, error) {
 	fields := make([]string, len(data))
 	values := make([]any, len(data))

@@ -6,7 +6,6 @@ import (
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
-// Search searches for rows in the database with where clauses
 func (r Repository) Search(b *resource.Resource, query map[string][]string) ([]map[string]any, error) {
 	fields := b.GetFieldNames()
 

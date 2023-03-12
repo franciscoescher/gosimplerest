@@ -6,7 +6,6 @@ import (
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
-// Insert inserts a new row into the database
 func (r Repository) Insert(b *resource.Resource, data map[string]any) (int64, error) {
 	l := len(data)
 	if b.AutoIncrementalPK {

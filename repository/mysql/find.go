@@ -7,7 +7,6 @@ import (
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
-// Find returns a single row from the database, search by the primary key
 func (r Repository) Find(b *resource.Resource, id any) (map[string]any, error) {
 	fields := b.GetFieldNames()
 

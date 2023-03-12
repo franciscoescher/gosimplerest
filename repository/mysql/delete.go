@@ -7,8 +7,7 @@ import (
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
-// Delete deletes a row with the given primary key from the database
-func (r Repository) Delete(b *resource.Resource, id string) error {
+func (r Repository) Delete(b *resource.Resource, id any) error {
 	var result sql.Result
 	err := error(nil)
 	if b.SoftDeleteField.Valid {
