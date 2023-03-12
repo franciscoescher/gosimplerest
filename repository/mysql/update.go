@@ -6,7 +6,7 @@ import (
 	"github.com/franciscoescher/gosimplerest/resource"
 )
 
-func (r Repository) Update(b *resource.Resource, data map[string]any) (int64, error) {
+func (r Repository) Update(b *resource.Resource, data map[string]any) (bool, error) {
 	fields := make([]string, len(data))
 	values := make([]any, len(data))
 	i := 0
@@ -20,11 +20,11 @@ func (r Repository) Update(b *resource.Resource, data map[string]any) (int64, er
 	sql := concatStr(`UPDATE `, b.Table(), ` SET `, strings.Join(fields, "=?,")+"=?", ` WHERE `, b.PrimaryKey, `=?`)
 	result, err := r.db.Exec(sql, values...)
 	if err != nil {
-		return 0, err
+		return false, err
 	}
 	affect, err := result.RowsAffected()
 	if err != nil {
-		return 0, err
+		return false, err
 	}
-	return affect, nil
+	return affect > 0, nil
 }

@@ -31,5 +31,8 @@ func (r Repository) Insert(b *resource.Resource, data map[string]any) (int64, er
 
 	r.data[pk] = data
 
+	if b.AutoIncrementalPK {
+		return pk.(int64), nil
+	}
 	return 0, nil
 }

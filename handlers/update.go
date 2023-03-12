@@ -83,7 +83,7 @@ func UpdateHandler(params *GetHandlerFuncParams) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		if affected == 0 {
+		if affected {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
