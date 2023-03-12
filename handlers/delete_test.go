@@ -26,7 +26,7 @@ func TestDeleteHandler(t *testing.T) {
 		"deleted_at": nil,
 		"created_at": t1.Add(-time.Hour * 24),
 	}
-	base.Repository.Insert(&testResource, data)
+	_, _ = base.Repository.Insert(&testResource, data)
 
 	// Make the request
 	route := "/" + strcase.KebabCase(testResource.Table())
